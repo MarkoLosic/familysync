@@ -1,5 +1,1 @@
-/**
- * Shopping Feature Exports
- */
-
-export { ShoppingScreen } from './ShoppingScreen'
+export * from './ShoppingScreen';

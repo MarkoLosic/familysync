@@ -1,25 +1,26 @@
-/**
- * Supabase Client Configuration
- */
+import { createClient } from '@supabase/supabase-js';
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
-import 'react-native-url-polyfill/auto'
-import { createClient } from '@supabase/supabase-js'
-import type { Database } from '@/types/supabase'
+const url =
+  process.env.EXPO_PUBLIC_SUPABASE_URL ||
+  Constants?.expoConfig?.extra?.supabaseUrl ||
+  '';
+const anonKey =
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
+  Constants?.expoConfig?.extra?.supabaseAnonKey ||
+  '';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    'Missing Supabase environment variables. Please check your .env file.'
-  )
+if (!url || !anonKey) {
+  console.warn(
+    'Supabase env vars missing. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY.'
+  );
 }
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient(url, anonKey, {
   auth: {
-    storage: undefined, // We'll use a custom storage adapter if needed
-    autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
+    autoRefreshToken: true,
+    detectSessionInUrl: Platform.OS === 'web',
   },
-})
+});

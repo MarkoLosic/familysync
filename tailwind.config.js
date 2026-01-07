@@ -1,9 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    './App.{js,jsx,ts,tsx}',
-    './src/**/*.{js,jsx,ts,tsx}',
-  ],
+  content: ['./App.{js,jsx,ts,tsx}', './src/**/*.{js,jsx,ts,tsx}'],
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
@@ -18,7 +15,7 @@ module.exports = {
           600: '#9333EA',
           700: '#7E22CE',
           800: '#6B21A8',
-          900: '#581C87',
+          900: '#581C87'
         },
         pink: {
           50: '#FDF2F8',
@@ -30,7 +27,7 @@ module.exports = {
           600: '#DB2777',
           700: '#BE185D',
           800: '#9D174D',
-          900: '#831843',
+          900: '#831843'
         },
         blue: {
           50: '#EFF6FF',
@@ -42,10 +39,10 @@ module.exports = {
           600: '#2563EB',
           700: '#1D4ED8',
           800: '#1E40AF',
-          900: '#1E3A8A',
-        },
-      },
-    },
+          900: '#1E3A8A'
+        }
+      }
+    }
   },
-  plugins: [],
+  plugins: []
 };

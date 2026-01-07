@@ -1,9 +1,4 @@
-/**
- * Register Screen
- * Create new account with email/password and profile name
- */
-
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -14,220 +9,205 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  StyleSheet,
-} from 'react-native'
-import { useNavigation } from '@react-navigation/native'
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { LinearGradient } from 'expo-linear-gradient'
-import { Mail, Lock, User, UserPlus } from 'lucide-react-native'
-import { supabase } from '@/services/supabase'
-import type { ProfileInsert } from '@/types/database'
-import type { AuthStackParamList } from '@/navigation/AuthNavigator'
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Mail, Lock, UserPlus } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { supabase } from '@/services/supabase';
+import { useAuthStore } from '@/store';
+import type { AuthStackParamList } from '@/navigation/AuthNavigator';
 
-type RegisterScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Register'>
+const createProfile = async (userId: string, name: string, email: string) => {
+  const payload = {
+    id: userId,
+    user_id: userId,
+    name,
+    email,
+    role: 'admin',
+    points: 0,
+    level: 1,
+  };
+
+  const { error } = await supabase.from('profiles').insert(payload);
+  if (!error) return;
+  if (error.code === '23505' || String(error.message).toLowerCase().includes('duplicate')) {
+    return;
+  }
+
+  if (String(error.message).includes('column')) {
+    const { error: fallbackError } = await supabase
+      .from('profiles')
+      .insert({
+        user_id: userId,
+        name,
+        email,
+        role: 'admin',
+        points: 0,
+        level: 1,
+      });
+    if (
+      fallbackError &&
+      (fallbackError.code === '23505' ||
+        String(fallbackError.message).toLowerCase().includes('duplicate'))
+    ) {
+      return;
+    }
+    if (fallbackError) throw fallbackError;
+    return;
+  }
+
+  throw error;
+};
 
 export function RegisterScreen() {
-  const navigation = useNavigation<RegisterScreenNavigationProp>()
-  const [username, setUsername] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
+  const refreshProfileAndFamily = useAuthStore((state) => state.refreshProfileAndFamily);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const emailRedirectTo =
+    Platform.OS === 'web' && typeof window !== 'undefined'
+      ? window.location.origin
+      : undefined;
 
   const handleRegister = async () => {
-    // Validation
-    if (!username || !email || !password || !confirmPassword) {
-      Alert.alert('Missing Information', 'Please fill in all fields')
-      return
-    }
-
-    if (password !== confirmPassword) {
-      Alert.alert('Password Mismatch', 'Passwords do not match')
-      return
+    if (!name || !email || !password) {
+      Alert.alert('Missing info', 'Please complete all fields.');
+      return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Weak Password', 'Password must be at least 6 characters')
-      return
+      Alert.alert('Password too short', 'Use at least 6 characters.');
+      return;
     }
 
     try {
-      setIsLoading(true)
-
-      // Create auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      setIsLoading(true);
+      const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
-      })
+        options: {
+          data: { name },
+          emailRedirectTo,
+        },
+      });
 
-      if (authError) throw authError
-      if (!authData.user) throw new Error('Failed to create user')
+      if (error) throw error;
+      if (!data.user) throw new Error('Account created, but user is missing.');
 
-      // Create profile
-      const profileData: any = {
-        user_id: authData.user.id,
-        username: username.trim(),
-        role: 'admin', // First user is admin by default, will be set to child when joining family
+      await createProfile(data.user.id, name.trim(), email.trim().toLowerCase());
+
+      if (!data.session) {
+        Alert.alert('Check your email', 'Confirm your email to finish registration.');
+        return;
       }
 
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert(profileData)
-
-      if (profileError) throw profileError
-
-      Alert.alert(
-        'Success!',
-        'Account created successfully. Please sign in.',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate('Login'),
-          },
-        ]
-      )
+      await refreshProfileAndFamily();
     } catch (error) {
-      console.error('Registration error:', error)
-      Alert.alert(
-        'Registration Failed',
-        error instanceof Error ? error.message : 'Failed to create account'
-      )
+      Alert.alert('Registration failed', error instanceof Error ? error.message : 'Try again.');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
-    <LinearGradient
-      colors={['#fce7f3', '#fef3c7', '#e0f2fe']}
-      style={styles.gradient}
-    >
+    <LinearGradient colors={['#EEF2FF', '#FCE7F3', '#E0F2FE']} style={{ flex: 1 }}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.content}>
-            {/* Header */}
-            <View style={styles.header}>
-              <View style={styles.iconContainer}>
-                <Text style={styles.icon}>🎉</Text>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+          <View className="flex-1 justify-center px-6 py-10">
+            <View className="items-center mb-10">
+              <View className="bg-white/90 rounded-full p-6 shadow-md">
+                <Text className="text-5xl">✨</Text>
               </View>
-              <Text style={styles.title}>Create Account</Text>
-              <Text style={styles.subtitle}>Join FamilySync and get organized</Text>
+              <Text className="text-3xl font-bold text-slate-900 mt-6">Create account</Text>
+              <Text className="text-base text-slate-600 mt-2 text-center">
+                Start your family mission with FamilySync.
+              </Text>
             </View>
 
-            {/* Form */}
-            <View style={styles.form}>
-              {/* Username Input */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Username</Text>
-                <View style={styles.inputContainer}>
-                  <User size={20} color="#64748b" strokeWidth={2} />
+            <View className="gap-4">
+              <View>
+                <Text className="text-sm font-semibold text-slate-700 mb-2">Name</Text>
+                <View className="flex-row items-center bg-white rounded-3xl px-4 py-4 shadow-sm">
+                  <UserPlus size={20} color="#64748B" />
                   <TextInput
-                    value={username}
-                    onChangeText={setUsername}
-                    placeholder="johndoe"
-                    placeholderTextColor="#94a3b8"
-                    autoCapitalize="none"
-                    autoComplete="username"
-                    style={styles.input}
+                    className="flex-1 ml-3 text-base text-slate-900"
+                    placeholder="Your name"
+                    placeholderTextColor="#94A3B8"
+                    value={name}
+                    onChangeText={setName}
                     editable={!isLoading}
                   />
                 </View>
               </View>
 
-              {/* Email Input */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Email</Text>
-                <View style={styles.inputContainer}>
-                  <Mail size={20} color="#64748b" strokeWidth={2} />
+              <View>
+                <Text className="text-sm font-semibold text-slate-700 mb-2">Email</Text>
+                <View className="flex-row items-center bg-white rounded-3xl px-4 py-4 shadow-sm">
+                  <Mail size={20} color="#64748B" />
                   <TextInput
-                    value={email}
-                    onChangeText={setEmail}
+                    className="flex-1 ml-3 text-base text-slate-900"
                     placeholder="your@email.com"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor="#94A3B8"
                     autoCapitalize="none"
                     keyboardType="email-address"
                     autoComplete="email"
-                    style={styles.input}
+                    value={email}
+                    onChangeText={setEmail}
                     editable={!isLoading}
                   />
                 </View>
               </View>
 
-              {/* Password Input */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Password</Text>
-                <View style={styles.inputContainer}>
-                  <Lock size={20} color="#64748b" strokeWidth={2} />
+              <View>
+                <Text className="text-sm font-semibold text-slate-700 mb-2">Password</Text>
+                <View className="flex-row items-center bg-white rounded-3xl px-4 py-4 shadow-sm">
+                  <Lock size={20} color="#64748B" />
                   <TextInput
+                    className="flex-1 ml-3 text-base text-slate-900"
+                    placeholder="••••••••"
+                    placeholderTextColor="#94A3B8"
+                    secureTextEntry
+                    autoComplete="password"
                     value={password}
                     onChangeText={setPassword}
-                    placeholder="••••••••"
-                    placeholderTextColor="#94a3b8"
-                    secureTextEntry
-                    autoComplete="password-new"
-                    style={styles.input}
                     editable={!isLoading}
                   />
                 </View>
               </View>
 
-              {/* Confirm Password Input */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Confirm Password</Text>
-                <View style={styles.inputContainer}>
-                  <Lock size={20} color="#64748b" strokeWidth={2} />
-                  <TextInput
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    placeholder="••••••••"
-                    placeholderTextColor="#94a3b8"
-                    secureTextEntry
-                    autoComplete="password-new"
-                    style={styles.input}
-                    editable={!isLoading}
-                  />
-                </View>
-              </View>
-
-              {/* Register Button */}
               <TouchableOpacity
+                className="mt-6 rounded-3xl overflow-hidden shadow-lg"
                 onPress={handleRegister}
                 disabled={isLoading}
-                style={[styles.button, isLoading && styles.buttonDisabled]}
-                activeOpacity={0.8}
+                activeOpacity={0.85}
               >
                 <LinearGradient
-                  colors={['#ec4899', '#f97316']}
+                  colors={['#F97316', '#EC4899']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
-                  style={styles.buttonGradient}
+                  className="flex-row items-center justify-center py-4"
                 >
                   {isLoading ? (
-                    <ActivityIndicator color="#ffffff" size="small" />
+                    <ActivityIndicator color="#FFFFFF" />
                   ) : (
                     <>
-                      <UserPlus size={22} color="#ffffff" strokeWidth={2.5} />
-                      <Text style={styles.buttonText}>Create Account</Text>
+                      <UserPlus size={20} color="#FFFFFF" />
+                      <Text className="text-white font-semibold text-base ml-2">Create account</Text>
                     </>
                   )}
                 </LinearGradient>
               </TouchableOpacity>
 
-              {/* Login Link */}
-              <View style={styles.footer}>
-                <Text style={styles.footerText}>Already have an account? </Text>
-                <TouchableOpacity
-                  onPress={() => navigation.navigate('Login')}
-                  disabled={isLoading}
-                >
-                  <Text style={styles.linkText}>Sign In</Text>
+              <View className="flex-row justify-center mt-4">
+                <Text className="text-slate-600">Already have an account? </Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                  <Text className="text-indigo-600 font-semibold">Sign in</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -235,124 +215,5 @@ export function RegisterScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
     </LinearGradient>
-  )
+  );
 }
-
-const styles = StyleSheet.create({
-  gradient: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 48,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 48,
-  },
-  iconContainer: {
-    backgroundColor: '#ffffff',
-    borderRadius: 50,
-    padding: 24,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  icon: {
-    fontSize: 48,
-  },
-  title: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#0f172a',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: '#475569',
-    textAlign: 'center',
-  },
-  form: {
-    gap: 16,
-  },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#334155',
-    marginBottom: 8,
-    marginLeft: 4,
-  },
-  inputContainer: {
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  input: {
-    flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
-    color: '#0f172a',
-  },
-  button: {
-    marginTop: 24,
-    borderRadius: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonGradient: {
-    borderRadius: 24,
-    paddingVertical: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontWeight: 'bold',
-    fontSize: 18,
-    marginLeft: 8,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  footerText: {
-    color: '#475569',
-    fontSize: 16,
-  },
-  linkText: {
-    color: '#db2777',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-})

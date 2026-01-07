@@ -1,345 +1,123 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { User, LogOut, Award, Settings, Bell, Shield, HelpCircle } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
+import { Copy, LogOut } from 'lucide-react-native';
+import * as Clipboard from 'expo-clipboard';
 import { useAuthStore } from '@/store';
+import { supabase } from '@/services/supabase';
+import { getProfilePoints } from '@/utils/profile';
 
 export function ProfileScreen() {
-  const { userProfile, familyDetails, signOut } = useAuthStore();
+  const { profile, family, familyMembers, signOut } = useAuthStore();
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignOut = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: () => signOut(),
-        },
-      ]
-    );
+  useEffect(() => {
+    const loadCode = async () => {
+      if (!family?.id) return;
+      setIsLoading(true);
+      try {
+        if (family.invite_code) {
+          setInviteCode(family.invite_code);
+          return;
+        }
+        const { data } = await supabase
+          .from('family_invites')
+          .select('code')
+          .eq('family_id', family.id)
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+        setInviteCode(data?.code ?? null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCode();
+  }, [family?.id]);
+
+  const handleCopy = async () => {
+    if (!inviteCode) return;
+    await Clipboard.setStringAsync(inviteCode);
+    Alert.alert('Copied', 'Invite code copied to clipboard.');
   };
 
-  const menuItems = [
-    { icon: Bell, label: 'Notifications', onPress: () => {} },
-    { icon: Settings, label: 'Settings', onPress: () => {} },
-    { icon: Shield, label: 'Privacy', onPress: () => {} },
-    { icon: HelpCircle, label: 'Help & Support', onPress: () => {} },
-  ];
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
-        </View>
+    <ScrollView className="flex-1 bg-slate-50">
+      <View className="px-6 pt-8 pb-6">
+        <Text className="text-3xl font-bold text-slate-900">Profile</Text>
+        <Text className="text-base text-slate-600 mt-1">Manage your family details.</Text>
+      </View>
 
-        {/* Profile Card */}
-        <View style={styles.profileCard}>
-          <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <User size={48} color="#fff" strokeWidth={2.5} />
+      <View className="px-6">
+        <View className="bg-white rounded-3xl p-5 shadow-sm">
+          <Text className="text-lg font-semibold text-slate-900">Your info</Text>
+          <View className="mt-3 gap-2">
+            <Text className="text-slate-700">Name: {profile?.name ?? '-'}</Text>
+            <Text className="text-slate-700">Role: {profile?.role ?? '-'}</Text>
+            <Text className="text-slate-700">Points: {getProfilePoints(profile)}</Text>
+          </View>
+        </View>
+      </View>
+
+      <View className="px-6 mt-6">
+        <View className="bg-white rounded-3xl p-5 shadow-sm">
+          <Text className="text-lg font-semibold text-slate-900">Family</Text>
+          <Text className="text-slate-700 mt-2">{family?.name ?? 'No family yet'}</Text>
+          <View className="mt-4">
+            <Text className="text-sm text-slate-500">Invite code</Text>
+            <View className="flex-row items-center justify-between mt-2 bg-slate-50 rounded-2xl px-4 py-3">
+              <Text className="text-slate-900 font-semibold">
+                {isLoading ? 'Loading...' : inviteCode ?? 'Not available'}
+              </Text>
+              <TouchableOpacity onPress={handleCopy} disabled={!inviteCode}>
+                <Copy size={18} color={inviteCode ? '#7C3AED' : '#CBD5F5'} />
+              </TouchableOpacity>
             </View>
           </View>
+        </View>
+      </View>
 
-          <Text style={styles.userName}>{userProfile?.name || 'User'}</Text>
-          <Text style={styles.userRole}>
-            {userProfile?.role === 'admin' ? 'Family Admin' : 'Family Member'}
-          </Text>
-
-          {familyDetails && (
-            <View style={styles.familyBadge}>
-              <Text style={styles.familyBadgeText}>{familyDetails.name}</Text>
-            </View>
-          )}
-
-          {/* Stats */}
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{userProfile?.points || 0}</Text>
-              <Text style={styles.statLabel}>Points</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <View style={styles.statIconRow}>
-                <Award size={20} color="#F59E0B" />
-                <Text style={styles.statValue}>12</Text>
+      <View className="px-6 mt-6">
+        <View className="bg-white rounded-3xl p-5 shadow-sm">
+          <Text className="text-lg font-semibold text-slate-900">Members</Text>
+          <View className="mt-4 gap-2">
+            {familyMembers.map((member) => (
+              <View key={member.id} className="bg-slate-50 rounded-2xl px-4 py-3">
+                <Text className="text-slate-900 font-medium">{member.name}</Text>
+                <Text className="text-xs text-slate-500 mt-1">{member.role}</Text>
               </View>
-              <Text style={styles.statLabel}>Tasks Done</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>7🔥</Text>
-              <Text style={styles.statLabel}>Day Streak</Text>
-            </View>
+            ))}
+            {familyMembers.length === 0 && (
+              <Text className="text-sm text-slate-500">No members yet.</Text>
+            )}
           </View>
         </View>
+      </View>
 
-        {/* Role Badge */}
-        <View style={styles.roleSection}>
-          <View style={[
-            styles.roleBadge,
-            userProfile?.role === 'admin' ? styles.roleBadgeAdmin : styles.roleBadgeMember
-          ]}>
-            <Text style={[
-              styles.roleText,
-              userProfile?.role === 'admin' ? styles.roleTextAdmin : styles.roleTextMember
-            ]}>
-              {userProfile?.role === 'admin' ? '👑 Admin' : '👤 Member'}
-            </Text>
+      <View className="px-6 mt-6 pb-10">
+        <TouchableOpacity
+          className="rounded-2xl bg-slate-900 py-4 items-center"
+          onPress={handleSignOut}
+        >
+          <View className="flex-row items-center">
+            <LogOut size={18} color="#FFFFFF" />
+            <Text className="text-white font-semibold ml-2">Sign out</Text>
           </View>
-        </View>
-
-        {/* Menu Items */}
-        <View style={styles.menuSection}>
-          {menuItems.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[
-                styles.menuItem,
-                index === menuItems.length - 1 && styles.menuItemLast
-              ]}
-              onPress={item.onPress}
-              activeOpacity={0.7}
-            >
-              <View style={styles.menuItemLeft}>
-                <View style={styles.menuIconContainer}>
-                  <item.icon size={20} color="#8B5CF6" strokeWidth={2.5} />
-                </View>
-                <Text style={styles.menuItemText}>{item.label}</Text>
-              </View>
-              <Text style={styles.menuItemArrow}>›</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Sign Out Button */}
-        <View style={styles.signOutSection}>
-          <TouchableOpacity
-            style={styles.signOutButton}
-            onPress={handleSignOut}
-            activeOpacity={0.7}
-          >
-            <LogOut size={20} color="#EF4444" strokeWidth={2.5} />
-            <Text style={styles.signOutText}>Sign Out</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* App Version */}
-        <View style={styles.footer}>
-          <Text style={styles.versionText}>FamilySync v1.0.0</Text>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F3FF',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 24,
-  },
-  headerTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#581C87',
-  },
-  profileCard: {
-    backgroundColor: 'white',
-    marginHorizontal: 24,
-    borderRadius: 24,
-    padding: 24,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  avatarContainer: {
-    marginBottom: 16,
-  },
-  avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: '#8B5CF6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 4,
-    borderColor: '#E9D5FF',
-  },
-  userName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  userEmail: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 12,
-  },
-  userRole: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 12,
-  },
-  familyBadge: {
-    backgroundColor: '#E9D5FF',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginBottom: 24,
-  },
-  familyBadgeText: {
-    color: '#581C87',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    width: '100%',
-  },
-  statItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  statIconRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginTop: 4,
-  },
-  statDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: '#E5E7EB',
-  },
-  roleSection: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  roleBadge: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 16,
-  },
-  roleBadgeAdmin: {
-    backgroundColor: '#FEF3C7',
-  },
-  roleBadgeMember: {
-    backgroundColor: '#DBEAFE',
-  },
-  roleText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  roleTextAdmin: {
-    color: '#92400E',
-  },
-  roleTextMember: {
-    color: '#1E40AF',
-  },
-  menuSection: {
-    backgroundColor: 'white',
-    marginHorizontal: 24,
-    borderRadius: 24,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  menuItemLast: {
-    borderBottomWidth: 0,
-  },
-  menuItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  menuIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#F5F3FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  menuItemText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#111827',
-  },
-  menuItemArrow: {
-    fontSize: 24,
-    color: '#9CA3AF',
-  },
-  signOutSection: {
-    paddingHorizontal: 24,
-    marginBottom: 16,
-  },
-  signOutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'white',
-    paddingVertical: 16,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: '#FEE2E2',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  signOutText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#EF4444',
-    marginLeft: 8,
-  },
-  footer: {
-    paddingVertical: 24,
-    alignItems: 'center',
-  },
-  versionText: {
-    fontSize: 12,
-    color: '#9CA3AF',
-  },
-});

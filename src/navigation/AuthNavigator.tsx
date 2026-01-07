@@ -12,13 +12,11 @@ export type AuthStackParamList = {
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
-export function AuthNavigator() {
+export function AuthNavigator({ initialRouteName }: { initialRouteName?: keyof AuthStackParamList }) {
   return (
     <Stack.Navigator
-      screenOptions={{
-        headerShown: false,
-        animation: 'slide_from_right',
-      }}
+      screenOptions={{ headerShown: false, animation: 'slide_from_right' }}
+      initialRouteName={initialRouteName}
     >
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />

@@ -1,317 +1,144 @@
-/**
- * Calendar Screen
- * Family shared calendar with Agenda view
- */
-
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
+  ScrollView,
   ActivityIndicator,
   Alert,
-} from 'react-native'
-import { Agenda, DateData, AgendaEntry, AgendaSchedule } from 'react-native-calendars'
-import { Plus, Calendar as CalendarIcon } from 'lucide-react-native'
-import { COLORS, SPACING } from '../../types/app'
-import { useAuthStore } from '../../store/authStore'
-import { CalendarEvent, CalendarEventInsert, Profile } from '../../types/database'
-import {
-  getFamilyEvents,
-  createCalendarEvent,
-  deleteCalendarEvent,
-} from '../../services/calendar'
-import { EventModal } from './EventModal'
+} from 'react-native';
+import { Calendar } from 'react-native-calendars';
+import { useAuthStore } from '@/store';
+import { createEvent, fetchEvents } from '@/services/calendar';
+import type { CalendarEvent } from '@/types';
 
-interface AgendaItem extends AgendaEntry {
-  event: CalendarEvent
-}
+const toDateKey = (value: string) => new Date(value).toISOString().split('T')[0];
 
-export const CalendarScreen: React.FC = () => {
-  const userProfile = useAuthStore((state) => state.userProfile)
-  const familyMembers = useAuthStore((state) => state.familyMembers)
+export function CalendarScreen() {
+  const { family, profile } = useAuthStore();
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [title, setTitle] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [events, setEvents] = useState<CalendarEvent[]>([])
-  const [items, setItems] = useState<AgendaSchedule>({})
-  const [loading, setLoading] = useState(true)
-  const [modalVisible, setModalVisible] = useState(false)
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split('T')[0]
-  )
-  const [markedDates, setMarkedDates] = useState<any>({})
-
-  // Load events on mount
-  useEffect(() => {
-    if (userProfile?.family_id) {
-      loadEvents()
-    }
-  }, [userProfile?.family_id])
-
-  // Load all family events
   const loadEvents = async () => {
-    if (!userProfile?.family_id) return
-
+    if (!family?.id) return;
+    setIsLoading(true);
     try {
-      setLoading(true)
-      const familyEvents = await getFamilyEvents(userProfile.family_id)
-      setEvents(familyEvents)
-      processEventsForAgenda(familyEvents)
-    } catch (error) {
-      console.error('Error loading events:', error)
-      Alert.alert('Error', 'Failed to load calendar events')
+      const data = await fetchEvents(family.id);
+      setEvents(data);
     } finally {
-      setLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  // Process events into Agenda format
-  const processEventsForAgenda = (events: CalendarEvent[]) => {
-    const agendaItems: AgendaSchedule = {}
-    const marked: any = {}
+  useEffect(() => {
+    loadEvents();
+  }, [family?.id]);
 
+  const markedDates = useMemo(() => {
+    const marks: Record<string, { marked?: boolean; selected?: boolean; selectedColor?: string }> = {};
     events.forEach((event) => {
-      const dateKey = event.event_date
+      const key = toDateKey(event.start_time);
+      marks[key] = { marked: true };
+    });
+    marks[selectedDate] = { ...(marks[selectedDate] || {}), selected: true, selectedColor: '#7C3AED' };
+    return marks;
+  }, [events, selectedDate]);
 
-      // Add to agenda items
-      if (!agendaItems[dateKey]) {
-        agendaItems[dateKey] = []
-      }
+  const dayEvents = events.filter((event) => toDateKey(event.start_time) === selectedDate);
 
-      agendaItems[dateKey].push({
-        name: event.title,
-        height: 80,
-        event: event,
-      } as AgendaItem)
+  const handleCreate = async () => {
+    if (!family?.id || !profile) return;
+    if (!title.trim()) {
+      Alert.alert('Missing info', 'Enter event title.');
+      return;
+    }
 
-      // Add to marked dates (dots)
-      if (!marked[dateKey]) {
-        marked[dateKey] = { dots: [] }
-      }
-
-      // Color dot by first participant or default color
-      const participantColor = getParticipantColor(event.participants[0])
-      marked[dateKey].dots.push({
-        key: event.id,
-        color: participantColor,
-      })
-    })
-
-    setItems(agendaItems)
-    setMarkedDates(marked)
-  }
-
-  // Get color for a participant
-  const getParticipantColor = (profileId: string) => {
-    const member = familyMembers.find((m) => m.id === profileId)
-    if (!member) return COLORS.primary
-
-    // Assign colors based on member index
-    const colors = [
-      COLORS.primary,
-      COLORS.secondary,
-      COLORS.success,
-      COLORS.warning,
-      COLORS.error,
-    ]
-    const memberIndex = familyMembers.findIndex((m) => m.id === profileId)
-    return colors[memberIndex % colors.length]
-  }
-
-  // Handle creating a new event
-  const handleCreateEvent = async (eventData: CalendarEventInsert) => {
     try {
-      await createCalendarEvent(eventData)
-      await loadEvents() // Reload events
-      Alert.alert('Success', 'Event created successfully!')
+      setIsLoading(true);
+      const start = new Date(`${selectedDate}T09:00:00`);
+      const end = new Date(`${selectedDate}T10:00:00`);
+      const created = await createEvent({
+        family_id: family.id,
+        title: title.trim(),
+        start_time: start.toISOString(),
+        end_time: end.toISOString(),
+        created_by: profile.id ?? profile.user_id ?? null,
+      });
+      setEvents((prev) => [...prev, created]);
+      setTitle('');
     } catch (error) {
-      console.error('Error creating event:', error)
-      Alert.alert('Error', 'Failed to create event')
+      Alert.alert('Create failed', error instanceof Error ? error.message : 'Try again.');
+    } finally {
+      setIsLoading(false);
     }
-  }
-
-  // Handle deleting an event (long press)
-  const handleDeleteEvent = (event: CalendarEvent) => {
-    Alert.alert(
-      'Delete Event',
-      `Are you sure you want to delete "${event.title}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteCalendarEvent(event.id)
-              await loadEvents()
-              Alert.alert('Success', 'Event deleted successfully!')
-            } catch (error) {
-              console.error('Error deleting event:', error)
-              Alert.alert('Error', 'Failed to delete event')
-            }
-          },
-        },
-      ]
-    )
-  }
-
-  // Render agenda item
-  const renderItem = (reservation: AgendaEntry) => {
-    const item = reservation as AgendaItem
-    if (!item.event) {
-      return <View />
-    }
-    
-    const event = item.event
-    const participantNames = event.participants
-      .map((id) => familyMembers.find((m: Profile) => m.id === id)?.name)
-      .filter(Boolean)
-      .join(', ')
-
-    const participantColor = getParticipantColor(event.participants[0])
-
-    return (
-      <TouchableOpacity
-        onLongPress={() => handleDeleteEvent(event)}
-        className="mr-4 mt-4 p-4 rounded-3xl"
-        style={{
-          backgroundColor: '#FFFFFF',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 8,
-          elevation: 2,
-          borderLeftWidth: 4,
-          borderLeftColor: participantColor,
-        }}
-      >
-        <Text
-          className="text-lg font-bold mb-1"
-          style={{ color: COLORS.text.primary }}
-        >
-          {event.title}
-        </Text>
-        {event.event_time && (
-          <Text className="text-sm mb-1" style={{ color: COLORS.text.secondary }}>
-            🕐 {event.event_time}
-          </Text>
-        )}
-        {event.description && (
-          <Text
-            className="text-sm mb-2"
-            style={{ color: COLORS.text.secondary }}
-            numberOfLines={2}
-          >
-            {event.description}
-          </Text>
-        )}
-        {participantNames && (
-          <Text className="text-xs" style={{ color: COLORS.text.tertiary }}>
-            👥 {participantNames}
-          </Text>
-        )}
-      </TouchableOpacity>
-    )
-  }
-
-  // Render empty date
-  const renderEmptyDate = () => {
-    return (
-      <View className="flex-1 items-center justify-center py-8">
-        <CalendarIcon size={48} color={COLORS.text.tertiary} />
-        <Text className="mt-2 text-center" style={{ color: COLORS.text.tertiary }}>
-          No events for this day
-        </Text>
-      </View>
-    )
-  }
-
-  // Handle day press
-  const handleDayPress = (day: DateData) => {
-    setSelectedDate(day.dateString)
-  }
-
-  if (loading) {
-    return (
-      <View className="flex-1 items-center justify-center" style={{ backgroundColor: COLORS.background }}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </View>
-    )
-  }
+  };
 
   return (
-    <View className="flex-1" style={{ backgroundColor: COLORS.background }}>
-      {/* Header */}
-      <View
-        className="px-6 pt-16 pb-4 flex-row items-center justify-between"
-        style={{ backgroundColor: '#FFFFFF' }}
-      >
-        <View>
-          <Text className="text-3xl font-bold" style={{ color: COLORS.text.primary }}>
-            Calendar
-          </Text>
-          <Text className="text-sm mt-1" style={{ color: COLORS.text.secondary }}>
-            Family events & activities
-          </Text>
-        </View>
-        <TouchableOpacity
-          onPress={() => {
-            setSelectedDate(new Date().toISOString().split('T')[0])
-            setModalVisible(true)
-          }}
-          className="w-12 h-12 rounded-full items-center justify-center"
-          style={{ backgroundColor: COLORS.primary }}
-        >
-          <Plus size={24} color="#FFFFFF" />
-        </TouchableOpacity>
+    <ScrollView className="flex-1 bg-slate-50">
+      <View className="px-6 pt-8 pb-6">
+        <Text className="text-3xl font-bold text-slate-900">Calendar</Text>
+        <Text className="text-base text-slate-600 mt-1">Plan your family moments.</Text>
       </View>
 
-      {/* Agenda Calendar */}
-      <Agenda
-        items={items}
-        selected={selectedDate}
-        renderItem={renderItem}
-        renderEmptyDate={renderEmptyDate}
-        onDayPress={handleDayPress}
-        showClosingKnob
-        markingType="multi-dot"
-        markedDates={markedDates}
-        theme={{
-          backgroundColor: COLORS.background,
-          calendarBackground: '#FFFFFF',
-          textSectionTitleColor: COLORS.text.secondary,
-          selectedDayBackgroundColor: COLORS.primary,
-          selectedDayTextColor: '#FFFFFF',
-          todayTextColor: COLORS.primary,
-          dayTextColor: COLORS.text.primary,
-          textDisabledColor: COLORS.text.tertiary,
-          dotColor: COLORS.primary,
-          selectedDotColor: '#FFFFFF',
-          arrowColor: COLORS.primary,
-          monthTextColor: COLORS.text.primary,
-          indicatorColor: COLORS.primary,
-          textDayFontFamily: 'System',
-          textMonthFontFamily: 'System',
-          textDayHeaderFontFamily: 'System',
-          textDayFontWeight: '400',
-          textMonthFontWeight: '700',
-          textDayHeaderFontWeight: '600',
-          textDayFontSize: 16,
-          textMonthFontSize: 18,
-          textDayHeaderFontSize: 13,
-          agendaDayTextColor: COLORS.text.primary,
-          agendaDayNumColor: COLORS.text.primary,
-          agendaTodayColor: COLORS.primary,
-          agendaKnobColor: COLORS.primary,
-        }}
-      />
+      <View className="px-6">
+        <View className="bg-white rounded-3xl p-4 shadow-sm">
+          <Calendar
+            markedDates={markedDates}
+            onDayPress={(day) => setSelectedDate(day.dateString)}
+            theme={{
+              todayTextColor: '#7C3AED',
+              selectedDayBackgroundColor: '#7C3AED',
+              arrowColor: '#7C3AED',
+            }}
+          />
+        </View>
+      </View>
 
-      {/* Event Modal */}
-      <EventModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onSave={handleCreateEvent}
-        selectedDate={selectedDate}
-      />
-    </View>
-  )
+      <View className="px-6 mt-6">
+        <View className="bg-white rounded-3xl p-5 shadow-sm">
+          <Text className="text-lg font-semibold text-slate-900">New event</Text>
+          <TextInput
+            className="mt-3 bg-slate-50 rounded-2xl px-4 py-3 text-base text-slate-900"
+            placeholder="Event title"
+            placeholderTextColor="#94A3B8"
+            value={title}
+            onChangeText={setTitle}
+          />
+          <TouchableOpacity
+            className="mt-4 rounded-2xl bg-purple-600 py-3 items-center"
+            onPress={handleCreate}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text className="text-white font-semibold">Add event</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View className="px-6 mt-6 pb-10">
+        <View className="bg-white rounded-3xl p-5 shadow-sm">
+          <Text className="text-lg font-semibold text-slate-900">Events on {selectedDate}</Text>
+          <View className="mt-4 gap-3">
+            {dayEvents.map((event) => (
+              <View key={event.id} className="bg-slate-50 rounded-2xl px-4 py-3">
+                <Text className="text-slate-900 font-medium">{event.title}</Text>
+                <Text className="text-xs text-slate-500 mt-1">
+                  {new Date(event.start_time).toLocaleTimeString()}
+                </Text>
+              </View>
+            ))}
+            {dayEvents.length === 0 && (
+              <Text className="text-sm text-slate-500">No events yet.</Text>
+            )}
+          </View>
+        </View>
+      </View>
+    </ScrollView>
+  );
 }
