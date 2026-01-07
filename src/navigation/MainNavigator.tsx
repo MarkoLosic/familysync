@@ -7,6 +7,9 @@ import {
   Calendar,
   ShoppingCart,
   User,
+  MapPin,
+  Bell,
+  StickyNote,
 } from 'lucide-react-native';
 import { HomeScreen } from '@/features/home';
 import { TasksScreen } from '@/features/tasks';
@@ -14,13 +17,19 @@ import { RewardsScreen } from '@/features/rewards';
 import { CalendarScreen } from '@/features/calendar';
 import { ShoppingScreen } from '@/features/shopping';
 import { ProfileScreen } from '@/features/profile';
+import { LocationsScreen } from '@/features/locations';
+import { RemindersScreen } from '@/features/reminders';
+import { FridgeScreen } from '@/features/fridge';
 
 export type MainTabParamList = {
   Home: undefined;
   Tasks: undefined;
   Rewards: undefined;
   Calendar: undefined;
+  Locations: undefined;
+  Reminders: undefined;
   Shopping: undefined;
+  Fridge: undefined;
   Profile: undefined;
 };
 
@@ -84,11 +93,39 @@ export function MainNavigator() {
         }}
       />
       <Tab.Screen
+        name="Locations"
+        component={LocationsScreen}
+        options={{
+          tabBarLabel: 'Map',
+          tabBarIcon: ({ color, size }) => (
+            <MapPin size={size} color={color} strokeWidth={2.4} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Reminders"
+        component={RemindersScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <Bell size={size} color={color} strokeWidth={2.4} />
+          ),
+        }}
+      />
+      <Tab.Screen
         name="Shopping"
         component={ShoppingScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <ShoppingCart size={size} color={color} strokeWidth={2.4} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Fridge"
+        component={FridgeScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <StickyNote size={size} color={color} strokeWidth={2.4} />
           ),
         }}
       />

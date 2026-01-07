@@ -4,6 +4,8 @@ import type {
   TaskCategory,
   TaskStatus,
   UserRole,
+  ReminderStatus,
+  LocationStatus,
 } from './app';
 
 export type Profile = {
@@ -98,6 +100,38 @@ export type ShoppingItem = {
   added_by?: string | null;
   purchased_by?: string | null;
   purchased_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type FamilyLocation = {
+  id: string;
+  family_id: string;
+  user_id: string;
+  status: LocationStatus;
+  lat?: number | null;
+  lng?: number | null;
+  updated_at?: string;
+};
+
+export type Reminder = {
+  id: string;
+  family_id: string;
+  title: string;
+  note?: string | null;
+  assigned_to: string | null;
+  created_by: string | null;
+  status: ReminderStatus;
+  due_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type FridgeNote = {
+  id: string;
+  family_id: string;
+  content: string;
+  created_by: string | null;
   created_at?: string;
   updated_at?: string;
 };

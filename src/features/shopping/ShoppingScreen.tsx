@@ -12,6 +12,7 @@ import { ShoppingCart } from 'lucide-react-native';
 import { useAuthStore } from '@/store';
 import { createShoppingItem, fetchShoppingItems, toggleShoppingItem } from '@/services/shopping';
 import type { ShoppingItem } from '@/types';
+import { supabase } from '@/services/supabase';
 
 export function ShoppingScreen() {
   const { family, profile } = useAuthStore();
@@ -32,6 +33,24 @@ export function ShoppingScreen() {
 
   useEffect(() => {
     loadItems();
+  }, [family?.id]);
+
+  useEffect(() => {
+    if (!family?.id) return;
+    const channel = supabase
+      .channel('shopping_items')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'shopping_items', filter: `family_id=eq.${family.id}` },
+        () => {
+          loadItems();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [family?.id]);
 
   const handleCreate = async () => {

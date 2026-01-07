@@ -24,7 +24,7 @@ const createProfile = async (userId: string, name: string, email: string) => {
     user_id: userId,
     name,
     email,
-    role: 'admin',
+    role: 'member',
     points: 0,
     level: 1,
   };
@@ -42,7 +42,7 @@ const createProfile = async (userId: string, name: string, email: string) => {
         user_id: userId,
         name,
         email,
-        role: 'admin',
+        role: 'member',
         points: 0,
         level: 1,
       });

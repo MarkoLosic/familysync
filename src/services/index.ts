@@ -4,3 +4,6 @@ export * from './tasks';
 export * from './rewards';
 export * from './calendar';
 export * from './shopping';
+export * from './locations';
+export * from './reminders';
+export * from './fridge';

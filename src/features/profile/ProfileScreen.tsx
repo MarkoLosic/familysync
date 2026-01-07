@@ -6,6 +6,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  TextInput,
 } from 'react-native';
 import { Copy, LogOut } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
@@ -17,6 +18,11 @@ export function ProfileScreen() {
   const { profile, family, familyMembers, signOut } = useAuthStore();
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [username, setUsername] = useState(profile?.username ?? profile?.name ?? '');
+  useEffect(() => {
+    setUsername(profile?.username ?? profile?.name ?? '');
+  }, [profile?.username, profile?.name]);
+  const [password, setPassword] = useState('');
 
   useEffect(() => {
     const loadCode = async () => {
@@ -54,6 +60,45 @@ export function ProfileScreen() {
     await signOut();
   };
 
+  const handleUpdateProfile = async () => {
+    if (!profile) return;
+    if (!username.trim()) {
+      Alert.alert('Missing info', 'Enter a username.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ username: username.trim(), name: username.trim() })
+        .eq('id', profile.id ?? profile.user_id);
+      if (error) throw error;
+      Alert.alert('Updated', 'Profile updated successfully.');
+    } catch (error) {
+      Alert.alert('Update failed', error instanceof Error ? error.message : 'Try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (!password.trim()) {
+      Alert.alert('Missing info', 'Enter a new password.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: password.trim() });
+      if (error) throw error;
+      setPassword('');
+      Alert.alert('Updated', 'Password changed successfully.');
+    } catch (error) {
+      Alert.alert('Update failed', error instanceof Error ? error.message : 'Try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <ScrollView className="flex-1 bg-slate-50">
       <View className="px-6 pt-8 pb-6">
@@ -87,6 +132,49 @@ export function ProfileScreen() {
               </TouchableOpacity>
             </View>
           </View>
+        </View>
+      </View>
+
+      <View className="px-6 mt-6">
+        <View className="bg-white rounded-3xl p-5 shadow-sm">
+          <Text className="text-lg font-semibold text-slate-900">Profile settings</Text>
+          <TextInput
+            className="mt-3 bg-slate-50 rounded-2xl px-4 py-3 text-base text-slate-900"
+            placeholder="Username"
+            placeholderTextColor="#94A3B8"
+            value={username}
+            onChangeText={setUsername}
+          />
+          <TouchableOpacity
+            className="mt-4 rounded-2xl bg-purple-600 py-3 items-center"
+            onPress={handleUpdateProfile}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text className="text-white font-semibold">Update username</Text>
+            )}
+          </TouchableOpacity>
+          <TextInput
+            className="mt-4 bg-slate-50 rounded-2xl px-4 py-3 text-base text-slate-900"
+            placeholder="New password"
+            placeholderTextColor="#94A3B8"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+          <TouchableOpacity
+            className="mt-4 rounded-2xl bg-slate-900 py-3 items-center"
+            onPress={handlePasswordChange}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text className="text-white font-semibold">Change password</Text>
+            )}
+          </TouchableOpacity>
         </View>
       </View>
 
