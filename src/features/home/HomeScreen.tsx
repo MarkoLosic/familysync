@@ -2,16 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
 import { useAuthStore } from '@/store';
 import { fetchTasks } from '@/services/tasks';
-import { fetchRewards } from '@/services/rewards';
 import { fetchEvents } from '@/services/calendar';
 import { fetchShoppingItems } from '@/services/shopping';
 import { getProfilePoints } from '@/utils/profile';
-import type { Task, Reward, CalendarEvent, ShoppingItem } from '@/types';
+import type { Task, CalendarEvent, ShoppingItem } from '@/types';
 
 export function HomeScreen() {
   const { profile, family, familyMembers } = useAuthStore();
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [rewards, setRewards] = useState<Reward[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [shopping, setShopping] = useState<ShoppingItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -20,14 +18,12 @@ export function HomeScreen() {
     if (!family?.id) return;
     setIsLoading(true);
     try {
-      const [taskData, rewardData, eventData, shoppingData] = await Promise.all([
+      const [taskData, eventData, shoppingData] = await Promise.all([
         fetchTasks(family.id),
-        fetchRewards(family.id),
         fetchEvents(family.id),
         fetchShoppingItems(family.id),
       ]);
       setTasks(taskData);
-      setRewards(rewardData);
       setEvents(eventData);
       setShopping(shoppingData);
     } finally {
@@ -42,7 +38,6 @@ export function HomeScreen() {
   const points = getProfilePoints(profile);
   const nextEvent = events[0];
   const activeTasks = tasks.filter((task) => task.status === 'active' || task.status === 'pending');
-  const pendingClaims = rewards.filter((reward) => (reward.available_count ?? 1) > 0);
   const shoppingOpen = shopping.filter((item) => !(item.is_checked ?? item.is_purchased));
 
   return (
@@ -91,26 +86,6 @@ export function HomeScreen() {
               )}
             </View>
           )}
-        </View>
-      </View>
-
-      <View className="px-6 mt-6">
-        <View className="bg-white rounded-3xl p-5 shadow-sm">
-          <Text className="text-lg font-semibold text-slate-900">Rewards</Text>
-          <Text className="text-sm text-slate-500 mt-1">
-            {pendingClaims.length} rewards ready to claim
-          </Text>
-          <View className="mt-4 gap-2">
-            {pendingClaims.slice(0, 2).map((reward) => (
-              <View key={reward.id} className="bg-slate-50 rounded-2xl px-4 py-3">
-                <Text className="text-slate-900 font-medium">{reward.title}</Text>
-                <Text className="text-xs text-slate-500 mt-1">{reward.cost} pts</Text>
-              </View>
-            ))}
-            {pendingClaims.length === 0 && (
-              <Text className="text-sm text-slate-500">Add your first reward.</Text>
-            )}
-          </View>
         </View>
       </View>
 

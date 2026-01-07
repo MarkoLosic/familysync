@@ -1,41 +1,30 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import {
-  Home,
-  CheckSquare,
-  Gift,
-  Calendar,
-  ShoppingCart,
-  User,
-  MapPin,
-  Bell,
-  StickyNote,
-} from 'lucide-react-native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Home, Calendar, ShoppingCart, User, MapPin } from 'lucide-react-native';
 import { HomeScreen } from '@/features/home';
-import { TasksScreen } from '@/features/tasks';
-import { RewardsScreen } from '@/features/rewards';
-import { CalendarScreen } from '@/features/calendar';
 import { ShoppingScreen } from '@/features/shopping';
 import { ProfileScreen } from '@/features/profile';
 import { LocationsScreen } from '@/features/locations';
-import { RemindersScreen } from '@/features/reminders';
-import { FridgeScreen } from '@/features/fridge';
+import { PlannerScreen } from '@/features/planner';
 
 export type MainTabParamList = {
   Home: undefined;
-  Tasks: undefined;
-  Rewards: undefined;
-  Calendar: undefined;
+  Planner: undefined;
   Locations: undefined;
-  Reminders: undefined;
   Shopping: undefined;
-  Fridge: undefined;
+  Profile: undefined;
+};
+
+export type MainStackParamList = {
+  Tabs: undefined;
   Profile: undefined;
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
+const Stack = createNativeStackNavigator<MainStackParamList>();
 
-export function MainNavigator() {
+function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={{
@@ -66,26 +55,8 @@ export function MainNavigator() {
         }}
       />
       <Tab.Screen
-        name="Tasks"
-        component={TasksScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <CheckSquare size={size} color={color} strokeWidth={2.4} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Rewards"
-        component={RewardsScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <Gift size={size} color={color} strokeWidth={2.4} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Calendar"
-        component={CalendarScreen}
+        name="Planner"
+        component={PlannerScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <Calendar size={size} color={color} strokeWidth={2.4} />
@@ -103,29 +74,11 @@ export function MainNavigator() {
         }}
       />
       <Tab.Screen
-        name="Reminders"
-        component={RemindersScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <Bell size={size} color={color} strokeWidth={2.4} />
-          ),
-        }}
-      />
-      <Tab.Screen
         name="Shopping"
         component={ShoppingScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
             <ShoppingCart size={size} color={color} strokeWidth={2.4} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Fridge"
-        component={FridgeScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <StickyNote size={size} color={color} strokeWidth={2.4} />
           ),
         }}
       />
@@ -139,5 +92,13 @@ export function MainNavigator() {
         }}
       />
     </Tab.Navigator>
+  );
+}
+
+export function MainNavigator() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Tabs" component={MainTabs} />
+    </Stack.Navigator>
   );
 }

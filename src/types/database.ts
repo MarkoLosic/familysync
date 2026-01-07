@@ -1,12 +1,4 @@
-import type {
-  RewardClaimStatus,
-  ShoppingCategory,
-  TaskCategory,
-  TaskStatus,
-  UserRole,
-  ReminderStatus,
-  LocationStatus,
-} from './app';
+import type { ShoppingCategory, TaskCategory, TaskStatus, UserRole, LocationStatus } from './app';
 
 export type Profile = {
   id: string;
@@ -50,30 +42,6 @@ export type Task = {
   updated_at?: string;
 };
 
-export type Reward = {
-  id: string;
-  family_id: string;
-  title: string;
-  description?: string | null;
-  cost: number;
-  icon?: string | null;
-  available_count?: number | null;
-  created_by?: string | null;
-  created_at?: string;
-  updated_at?: string;
-};
-
-export type RewardClaim = {
-  id: string;
-  reward_id: string;
-  user_id: string;
-  family_id: string;
-  status: RewardClaimStatus;
-  claimed_at?: string;
-  resolved_at?: string | null;
-  resolved_by?: string | null;
-};
-
 export type CalendarEvent = {
   id: string;
   family_id: string;
@@ -111,27 +79,5 @@ export type FamilyLocation = {
   status: LocationStatus;
   lat?: number | null;
   lng?: number | null;
-  updated_at?: string;
-};
-
-export type Reminder = {
-  id: string;
-  family_id: string;
-  title: string;
-  note?: string | null;
-  assigned_to: string | null;
-  created_by: string | null;
-  status: ReminderStatus;
-  due_at?: string | null;
-  created_at?: string;
-  updated_at?: string;
-};
-
-export type FridgeNote = {
-  id: string;
-  family_id: string;
-  content: string;
-  created_by: string | null;
-  created_at?: string;
   updated_at?: string;
 };
