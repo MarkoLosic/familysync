@@ -31,3 +31,15 @@ export const createEvent = async (payload: {
   if (error) throw error;
   return data as CalendarEvent;
 };
+
+export const updateEvent = async (eventId: string, updates: Partial<CalendarEvent>) => {
+  const { data, error } = await supabase
+    .from('calendar_events')
+    .update(updates)
+    .eq('id', eventId)
+    .select('*')
+    .single();
+
+  if (error) throw error;
+  return data as CalendarEvent;
+};
