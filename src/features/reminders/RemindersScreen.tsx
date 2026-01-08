@@ -11,6 +11,7 @@ import {
 import { Bell, CheckCircle2 } from 'lucide-react-native';
 import { useAuthStore } from '@/store';
 import { createReminder, fetchReminders, toggleReminderStatus } from '@/services/reminders';
+import { hapticError, hapticImpactLight, hapticSuccess } from '@/utils/haptics';
 import type { Reminder } from '@/types';
 
 export function RemindersScreen() {
@@ -57,7 +58,9 @@ export function RemindersScreen() {
       setTitle('');
       setNote('');
       setAssignee(null);
+      void hapticSuccess();
     } catch (error) {
+      void hapticError();
       Alert.alert('Create failed', error instanceof Error ? error.message : 'Try again.');
     } finally {
       setIsLoading(false);
@@ -69,7 +72,9 @@ export function RemindersScreen() {
       setIsLoading(true);
       const updated = await toggleReminderStatus(reminder);
       setReminders((prev) => prev.map((item) => (item.id === reminder.id ? updated : item)));
+      void hapticImpactLight();
     } catch (error) {
+      void hapticError();
       Alert.alert('Update failed', error instanceof Error ? error.message : 'Try again.');
     } finally {
       setIsLoading(false);

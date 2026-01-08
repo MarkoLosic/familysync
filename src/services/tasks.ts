@@ -16,17 +16,17 @@ export const createTask = async (payload: {
   family_id: string;
   title: string;
   description?: string;
-  points?: number;
+  points_value?: number;
   assigned_to?: string | null;
   created_by?: string | null;
-  category?: Task['category'];
+  task_type?: Task['task_type'];
   due_date?: string | null;
 }) => {
   const { data, error } = await supabase
     .from('tasks')
     .insert({
       ...payload,
-      status: 'active',
+      status: 'pending',
     })
     .select('*')
     .single();

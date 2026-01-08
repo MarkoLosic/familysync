@@ -29,11 +29,11 @@ export type Task = {
   family_id: string;
   title: string;
   description?: string | null;
-  points?: number | null;
+  points_value?: number | null;
   assigned_to?: string | null;
   created_by?: string | null;
   status: TaskStatus;
-  category?: TaskCategory | null;
+  task_type?: TaskCategory | null;
   due_date?: string | null;
   completed_at?: string | null;
   approved_at?: string | null;

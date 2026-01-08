@@ -12,6 +12,7 @@ import { Gift } from 'lucide-react-native';
 import { useAuthStore } from '@/store';
 import { claimReward, createReward, fetchRewards } from '@/services/rewards';
 import { getProfilePoints } from '@/utils/profile';
+import { hapticError, hapticSuccess } from '@/utils/haptics';
 import type { Reward } from '@/types';
 
 export function RewardsScreen() {
@@ -54,7 +55,9 @@ export function RewardsScreen() {
       setRewards((prev) => [created, ...prev]);
       setTitle('');
       setCost('50');
+      void hapticSuccess();
     } catch (error) {
+      void hapticError();
       Alert.alert('Create failed', error instanceof Error ? error.message : 'Try again.');
     } finally {
       setIsLoading(false);
@@ -66,8 +69,10 @@ export function RewardsScreen() {
     try {
       setIsLoading(true);
       await claimReward(reward, profile);
+      void hapticSuccess();
       Alert.alert('Claim sent', 'Parent approval pending.');
     } catch (error) {
+      void hapticError();
       Alert.alert('Claim failed', error instanceof Error ? error.message : 'Try again.');
     } finally {
       setIsLoading(false);

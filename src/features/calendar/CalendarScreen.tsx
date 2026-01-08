@@ -12,6 +12,7 @@ import { Calendar } from 'react-native-calendars';
 import { useAuthStore } from '@/store';
 import { createEvent, fetchEvents } from '@/services/calendar';
 import { getProfileId } from '@/utils/profile';
+import { hapticError, hapticSuccess } from '@/utils/haptics';
 import type { CalendarEvent } from '@/types';
 
 const toDateKey = (value: string) => value.split('T')[0];
@@ -74,7 +75,9 @@ export function CalendarScreen() {
       });
       setEvents((prev) => [...prev, created]);
       setTitle('');
+      void hapticSuccess();
     } catch (error) {
+      void hapticError();
       const message =
         error instanceof Error
           ? error.message

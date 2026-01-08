@@ -13,6 +13,7 @@ import { useAuthStore } from '@/store';
 import { createShoppingItem, fetchShoppingItems, toggleShoppingItem } from '@/services/shopping';
 import type { ShoppingItem } from '@/types';
 import { supabase } from '@/services/supabase';
+import { hapticError, hapticImpactLight, hapticSuccess } from '@/utils/haptics';
 
 export function ShoppingScreen() {
   const { family, profile } = useAuthStore();
@@ -69,7 +70,9 @@ export function ShoppingScreen() {
       });
       setItems((prev) => [created, ...prev]);
       setTitle('');
+      void hapticSuccess();
     } catch (error) {
+      void hapticError();
       Alert.alert('Create failed', error instanceof Error ? error.message : 'Try again.');
     } finally {
       setIsLoading(false);
@@ -81,7 +84,9 @@ export function ShoppingScreen() {
       setIsLoading(true);
       const updated = await toggleShoppingItem(item);
       setItems((prev) => prev.map((entry) => (entry.id === item.id ? updated : entry)));
+      void hapticImpactLight();
     } catch (error) {
+      void hapticError();
       Alert.alert('Update failed', error instanceof Error ? error.message : 'Try again.');
     } finally {
       setIsLoading(false);

@@ -12,6 +12,7 @@ import { StickyNote, Trash2 } from 'lucide-react-native';
 import { useAuthStore } from '@/store';
 import { createFridgeNote, deleteFridgeNote, fetchFridgeNotes } from '@/services/fridge';
 import type { FridgeNote } from '@/types';
+import { hapticError, hapticImpactLight, hapticSuccess } from '@/utils/haptics';
 
 export function FridgeScreen() {
   const { family, profile } = useAuthStore();
@@ -50,7 +51,9 @@ export function FridgeScreen() {
       });
       setNotes((prev) => [created, ...prev]);
       setContent('');
+      void hapticSuccess();
     } catch (error) {
+      void hapticError();
       Alert.alert('Create failed', error instanceof Error ? error.message : 'Try again.');
     } finally {
       setIsLoading(false);
@@ -62,7 +65,9 @@ export function FridgeScreen() {
       setIsLoading(true);
       await deleteFridgeNote(noteId);
       setNotes((prev) => prev.filter((note) => note.id !== noteId));
+      void hapticImpactLight();
     } catch (error) {
+      void hapticError();
       Alert.alert('Delete failed', error instanceof Error ? error.message : 'Try again.');
     } finally {
       setIsLoading(false);

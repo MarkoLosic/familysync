@@ -26,7 +26,7 @@ CREATE POLICY shopping_items_select_policy ON shopping_items
   FOR SELECT
   USING (
     family_id IN (
-      SELECT family_id FROM profiles WHERE user_id = auth.uid()
+      SELECT family_id FROM profiles WHERE id = auth.uid()
     )
   );
 
@@ -35,7 +35,7 @@ CREATE POLICY shopping_items_insert_policy ON shopping_items
   FOR INSERT
   WITH CHECK (
     family_id IN (
-      SELECT family_id FROM profiles WHERE user_id = auth.uid()
+      SELECT family_id FROM profiles WHERE id = auth.uid()
     )
   );
 
@@ -44,7 +44,7 @@ CREATE POLICY shopping_items_update_policy ON shopping_items
   FOR UPDATE
   USING (
     family_id IN (
-      SELECT family_id FROM profiles WHERE user_id = auth.uid()
+      SELECT family_id FROM profiles WHERE id = auth.uid()
     )
   );
 
@@ -53,7 +53,7 @@ CREATE POLICY shopping_items_delete_policy ON shopping_items
   FOR DELETE
   USING (
     family_id IN (
-      SELECT family_id FROM profiles WHERE user_id = auth.uid()
+      SELECT family_id FROM profiles WHERE id = auth.uid()
     )
   );
 

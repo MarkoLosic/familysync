@@ -37,7 +37,9 @@ export function HomeScreen() {
 
   const points = getProfilePoints(profile);
   const nextEvent = events[0];
-  const activeTasks = tasks.filter((task) => task.status === 'active' || task.status === 'pending');
+  const activeTasks = tasks.filter(
+    (task) => task.status === 'pending' || task.status === 'waiting_approval'
+  );
   const shoppingOpen = shopping.filter((item) => !(item.is_checked ?? item.is_purchased));
 
   return (
@@ -78,7 +80,7 @@ export function HomeScreen() {
               {activeTasks.slice(0, 3).map((task) => (
                 <View key={task.id} className="bg-slate-50 rounded-2xl px-4 py-3">
                   <Text className="text-slate-900 font-medium">{task.title}</Text>
-                  <Text className="text-xs text-slate-500 mt-1">{task.points ?? 0} pts</Text>
+                  <Text className="text-xs text-slate-500 mt-1">{task.points_value ?? 0} pts</Text>
                 </View>
               ))}
               {activeTasks.length === 0 && (

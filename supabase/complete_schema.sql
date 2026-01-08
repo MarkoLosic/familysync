@@ -109,7 +109,7 @@ CREATE POLICY "Family members can view family tasks"
   ON tasks FOR SELECT
   USING (
     family_id IN (
-      SELECT family_id FROM profiles WHERE user_id = auth.uid()
+      SELECT family_id FROM profiles WHERE id = auth.uid()
     )
   );
 
@@ -117,7 +117,7 @@ CREATE POLICY "Family members can create tasks"
   ON tasks FOR INSERT
   WITH CHECK (
     family_id IN (
-      SELECT family_id FROM profiles WHERE user_id = auth.uid()
+      SELECT family_id FROM profiles WHERE id = auth.uid()
     )
   );
 
@@ -125,13 +125,13 @@ CREATE POLICY "Assigned users and admins can update tasks"
   ON tasks FOR UPDATE
   USING (
     family_id IN (
-      SELECT family_id FROM profiles WHERE user_id = auth.uid()
+      SELECT family_id FROM profiles WHERE id = auth.uid()
     )
     AND (
       assigned_to = auth.uid() OR
       EXISTS (
         SELECT 1 FROM profiles 
-        WHERE user_id = auth.uid() 
+        WHERE id = auth.uid() 
         AND family_id = tasks.family_id 
         AND role IN ('admin', 'parent')
       )
@@ -243,7 +243,7 @@ CREATE POLICY "Family members can view family events"
   ON calendar_events FOR SELECT
   USING (
     family_id IN (
-      SELECT family_id FROM profiles WHERE user_id = auth.uid()
+      SELECT family_id FROM profiles WHERE id = auth.uid()
     )
   );
 
@@ -251,7 +251,7 @@ CREATE POLICY "Family members can create events"
   ON calendar_events FOR INSERT
   WITH CHECK (
     family_id IN (
-      SELECT family_id FROM profiles WHERE user_id = auth.uid()
+      SELECT family_id FROM profiles WHERE id = auth.uid()
     )
   );
 
@@ -261,7 +261,7 @@ CREATE POLICY "Event creators and admins can update events"
     created_by = auth.uid() OR
     family_id IN (
       SELECT family_id FROM profiles 
-      WHERE user_id = auth.uid() AND role IN ('admin', 'parent')
+      WHERE id = auth.uid() AND role IN ('admin', 'parent')
     )
   );
 

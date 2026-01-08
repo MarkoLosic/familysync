@@ -1,6 +1,6 @@
 export type UserRole = 'admin' | 'parent' | 'child' | 'member';
 
-export type TaskStatus = 'active' | 'pending_approval' | 'completed' | 'rejected' | 'pending' | 'in_progress' | 'approved';
+export type TaskStatus = 'pending' | 'waiting_approval' | 'completed' | 'postponed';
 
 export type TaskCategory = 'chore' | 'homework' | 'other';
 
