@@ -47,10 +47,10 @@ export type CalendarEvent = {
   family_id: string;
   title: string;
   description?: string | null;
-  start_time: string;
-  end_time: string;
+  event_date: string;
+  event_time?: string | null;
   location?: string | null;
-  created_by?: string | null;
+  created_by: string;
   created_at?: string;
   updated_at?: string;
 };

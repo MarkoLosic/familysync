@@ -96,7 +96,8 @@ export function HomeScreen() {
             <View className="mt-3">
               <Text className="text-slate-900 font-medium">{nextEvent.title}</Text>
               <Text className="text-sm text-slate-500 mt-1">
-                {new Date(nextEvent.start_time).toLocaleString()}
+                {nextEvent.event_date}
+                {nextEvent.event_time ? ` ${nextEvent.event_time}` : ''}
               </Text>
             </View>
           ) : (

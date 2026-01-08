@@ -11,9 +11,10 @@ import {
 import { Calendar } from 'react-native-calendars';
 import { useAuthStore } from '@/store';
 import { createEvent, fetchEvents } from '@/services/calendar';
+import { getProfileId } from '@/utils/profile';
 import type { CalendarEvent } from '@/types';
 
-const toDateKey = (value: string) => new Date(value).toISOString().split('T')[0];
+const toDateKey = (value: string) => value.split('T')[0];
 
 export function CalendarScreen() {
   const { family, profile } = useAuthStore();
@@ -40,17 +41,22 @@ export function CalendarScreen() {
   const markedDates = useMemo(() => {
     const marks: Record<string, { marked?: boolean; selected?: boolean; selectedColor?: string }> = {};
     events.forEach((event) => {
-      const key = toDateKey(event.start_time);
+      const key = toDateKey(event.event_date);
       marks[key] = { marked: true };
     });
     marks[selectedDate] = { ...(marks[selectedDate] || {}), selected: true, selectedColor: '#7C3AED' };
     return marks;
   }, [events, selectedDate]);
 
-  const dayEvents = events.filter((event) => toDateKey(event.start_time) === selectedDate);
+  const dayEvents = events.filter((event) => toDateKey(event.event_date) === selectedDate);
 
   const handleCreate = async () => {
     if (!family?.id || !profile) return;
+    const profileId = getProfileId(profile);
+    if (!profileId) {
+      Alert.alert('Create failed', 'Missing profile id.');
+      return;
+    }
     if (!title.trim()) {
       Alert.alert('Missing info', 'Enter event title.');
       return;
@@ -58,19 +64,24 @@ export function CalendarScreen() {
 
     try {
       setIsLoading(true);
-      const start = new Date(`${selectedDate}T09:00:00`);
-      const end = new Date(`${selectedDate}T10:00:00`);
+      const eventTime = '09:00';
       const created = await createEvent({
         family_id: family.id,
         title: title.trim(),
-        start_time: start.toISOString(),
-        end_time: end.toISOString(),
-        created_by: profile.id ?? profile.user_id ?? null,
+        event_date: selectedDate,
+        event_time: eventTime,
+        created_by: profileId,
       });
       setEvents((prev) => [...prev, created]);
       setTitle('');
     } catch (error) {
-      Alert.alert('Create failed', error instanceof Error ? error.message : 'Try again.');
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'object' && error && 'message' in error
+            ? String((error as { message?: string }).message)
+            : 'Try again.';
+      Alert.alert('Create failed', message);
     } finally {
       setIsLoading(false);
     }
@@ -128,9 +139,7 @@ export function CalendarScreen() {
             {dayEvents.map((event) => (
               <View key={event.id} className="bg-slate-50 rounded-2xl px-4 py-3">
                 <Text className="text-slate-900 font-medium">{event.title}</Text>
-                <Text className="text-xs text-slate-500 mt-1">
-                  {new Date(event.start_time).toLocaleTimeString()}
-                </Text>
+                <Text className="text-xs text-slate-500 mt-1">{event.event_time ?? 'All day'}</Text>
               </View>
             ))}
             {dayEvents.length === 0 && (

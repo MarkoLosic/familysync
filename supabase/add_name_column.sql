@@ -2,8 +2,7 @@
 -- Run this if you get error: "Could not find the 'name' column of 'profiles'"
 
 -- Add name column if it doesn't exist
-ALTER TABLE profiles 
-ADD COLUMN IF NOT EXISTS name TEXT;
+
 
 -- Set default value for existing rows (if any)
 UPDATE profiles 

@@ -6,7 +6,8 @@ export const fetchEvents = async (familyId: string) => {
     .from('calendar_events')
     .select('*')
     .eq('family_id', familyId)
-    .order('start_time', { ascending: true });
+    .order('event_date', { ascending: true })
+    .order('event_time', { ascending: true, nullsFirst: true });
 
   if (error) throw error;
   return data as CalendarEvent[];
@@ -16,10 +17,10 @@ export const createEvent = async (payload: {
   family_id: string;
   title: string;
   description?: string;
-  start_time: string;
-  end_time: string;
+  event_date: string;
+  event_time?: string;
   location?: string;
-  created_by?: string | null;
+  created_by: string;
 }) => {
   const { data, error } = await supabase
     .from('calendar_events')

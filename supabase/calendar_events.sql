@@ -28,7 +28,7 @@ CREATE POLICY calendar_events_select_policy ON calendar_events
   FOR SELECT
   USING (
     family_id IN (
-      SELECT family_id FROM profiles WHERE user_id = auth.uid()
+      SELECT family_id FROM profiles WHERE id = auth.uid()
     )
   );
 
@@ -37,7 +37,7 @@ CREATE POLICY calendar_events_insert_policy ON calendar_events
   FOR INSERT
   WITH CHECK (
     family_id IN (
-      SELECT family_id FROM profiles WHERE user_id = auth.uid()
+      SELECT family_id FROM profiles WHERE id = auth.uid()
     )
   );
 
@@ -45,11 +45,11 @@ CREATE POLICY calendar_events_insert_policy ON calendar_events
 CREATE POLICY calendar_events_update_policy ON calendar_events
   FOR UPDATE
   USING (
-    created_by = (SELECT id FROM profiles WHERE user_id = auth.uid())
+    created_by = (SELECT id FROM profiles WHERE id = auth.uid())
     OR
     (
       family_id IN (
-        SELECT family_id FROM profiles WHERE user_id = auth.uid() AND role = 'admin'
+        SELECT family_id FROM profiles WHERE id = auth.uid() AND role = 'admin'
       )
     )
   );
@@ -58,11 +58,11 @@ CREATE POLICY calendar_events_update_policy ON calendar_events
 CREATE POLICY calendar_events_delete_policy ON calendar_events
   FOR DELETE
   USING (
-    created_by = (SELECT id FROM profiles WHERE user_id = auth.uid())
+    created_by = (SELECT id FROM profiles WHERE id = auth.uid())
     OR
     (
       family_id IN (
-        SELECT family_id FROM profiles WHERE user_id = auth.uid() AND role = 'admin'
+        SELECT family_id FROM profiles WHERE id = auth.uid() AND role = 'admin'
       )
     )
   );
