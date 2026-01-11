@@ -4,6 +4,7 @@ export type Profile = {
   id: string;
   user_id?: string;
   email?: string | null;
+  username?: string | null;
   name: string;
   role: UserRole;
   family_id: string | null;
@@ -79,5 +80,51 @@ export type FamilyLocation = {
   status: LocationStatus;
   lat?: number | null;
   lng?: number | null;
+  updated_at?: string;
+};
+
+export type Reward = {
+  id: string;
+  family_id: string;
+  title: string;
+  description?: string | null;
+  cost: number;
+  icon?: string | null;
+  available_count?: number | null;
+  created_by?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type RewardClaim = {
+  id: string;
+  reward_id: string;
+  user_id: string;
+  family_id: string;
+  status: 'pending' | 'approved' | 'denied';
+  claimed_at?: string;
+  resolved_at?: string | null;
+  resolved_by?: string | null;
+};
+
+export type Reminder = {
+  id: string;
+  family_id: string;
+  title: string;
+  note?: string | null;
+  assigned_to?: string | null;
+  created_by?: string | null;
+  status: 'pending' | 'done';
+  due_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type FridgeNote = {
+  id: string;
+  family_id: string;
+  content: string;
+  created_by?: string | null;
+  created_at?: string;
   updated_at?: string;
 };
