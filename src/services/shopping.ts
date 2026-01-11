@@ -29,14 +29,20 @@ export const createShoppingItem = async (payload: {
 };
 
 export const toggleShoppingItem = async (item: ShoppingItem) => {
-  const current = item.is_checked ?? item.is_purchased ?? false;
+  const current = item.is_checked ?? false;
   const { data, error } = await supabase
     .from('shopping_items')
-    .update({ is_checked: !current, is_purchased: !current })
+    .update({ is_checked: !current })
     .eq('id', item.id)
     .select('*')
     .single();
 
   if (error) throw error;
   return data as ShoppingItem;
+};
+
+export const deleteShoppingItem = async (itemId: string) => {
+  const { error } = await supabase.from('shopping_items').delete().eq('id', itemId);
+
+  if (error) throw error;
 };

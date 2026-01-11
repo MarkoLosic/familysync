@@ -13,7 +13,7 @@ import {
 import { useAuthStore } from '@/store';
 import { fetchTasks, updateTaskStatus } from '@/services/tasks';
 import { fetchEvents, updateEvent } from '@/services/calendar';
-import { fetchShoppingItems, toggleShoppingItem } from '@/services/shopping';
+import { deleteShoppingItem, fetchShoppingItems, toggleShoppingItem } from '@/services/shopping';
 import { getProfilePoints } from '@/utils/profile';
 import type { Task, CalendarEvent, ShoppingItem } from '@/types';
 
@@ -58,7 +58,7 @@ export function HomeScreen() {
   const activeTasks = tasks.filter(
     (task) => task.status === 'pending' || task.status === 'waiting_approval'
   );
-  const shoppingOpen = shopping.filter((item) => !(item.is_checked ?? item.is_purchased));
+  const shoppingOpen = shopping.filter((item) => !(item.is_checked ?? false));
 
   const openTaskModal = (task: Task) => {
     setSelectedTask(task);
@@ -131,8 +131,8 @@ export function HomeScreen() {
   const handleShoppingToggle = async (item: ShoppingItem) => {
     try {
       setIsLoading(true);
-      const updated = await toggleShoppingItem(item);
-      setShopping((prev) => prev.map((entry) => (entry.id === item.id ? updated : entry)));
+      await deleteShoppingItem(item.id);
+      setShopping((prev) => prev.filter((entry) => entry.id !== item.id));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Try again.';
       Alert.alert('Update failed', message);

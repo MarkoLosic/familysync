@@ -129,7 +129,7 @@ export function ShoppingScreen() {
           <Text className="text-lg font-semibold text-slate-900">Your list</Text>
           <View className="mt-4 gap-3">
             {items.map((item) => {
-              const checked = item.is_checked ?? item.is_purchased ?? false;
+              const checked = item.is_checked ?? false;
               return (
                 <TouchableOpacity
                   key={item.id}
