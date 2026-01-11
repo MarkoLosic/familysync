@@ -53,6 +53,32 @@ export function LocationsScreen() {
         return;
       }
 
+      const applyLocationUpdate = (updated: FamilyLocation) => {
+        setLocations((prev) => [updated, ...prev.filter((item) => item.id !== updated.id)]);
+      };
+
+      try {
+        const initial = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        if (!isMounted) return;
+        const coords = {
+          lat: initial.coords.latitude,
+          lng: initial.coords.longitude,
+        };
+        setCurrentCoords(coords);
+        if (family?.id && profile) {
+          const updated = await upsertLocation({
+            family_id: family.id,
+            user_id: profile.id ?? profile.user_id ?? '',
+            status: currentStatus,
+            lat: coords.lat,
+            lng: coords.lng,
+          });
+          applyLocationUpdate(updated);
+        }
+      } catch (error) {
+        // Ignore initial location failures; watchPosition will retry.
+      }
+
       locationSub.current = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.Balanced,
@@ -67,13 +93,18 @@ export function LocationsScreen() {
           };
           setCurrentCoords(coords);
           if (family?.id && profile) {
-            await upsertLocation({
-              family_id: family.id,
-              user_id: profile.id ?? profile.user_id ?? '',
-              status: currentStatus,
-              lat: coords.lat,
-              lng: coords.lng,
-            });
+            try {
+              const updated = await upsertLocation({
+                family_id: family.id,
+                user_id: profile.id ?? profile.user_id ?? '',
+                status: currentStatus,
+                lat: coords.lat,
+                lng: coords.lng,
+              });
+              applyLocationUpdate(updated);
+            } catch (error) {
+              // Avoid noisy alerts during background GPS updates.
+            }
           }
         }
       );
@@ -150,6 +181,8 @@ export function LocationsScreen() {
               style={{ flex: 1 }}
               initialRegion={initialRegion}
               provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
+              showsUserLocation
+              showsMyLocationButton={Platform.OS === 'android'}
             >
               {markerLocations.map((item) => (
                 <Marker

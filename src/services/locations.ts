@@ -8,7 +8,7 @@ export const fetchFamilyLocations = async (familyId: string) => {
     .eq('family_id', familyId)
     .order('updated_at', { ascending: false });
 
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return data as FamilyLocation[];
 };
 
@@ -21,7 +21,7 @@ export const upsertLocation = async (payload: {
 }) => {
   const { data, error } = await supabase
     .from('family_locations')
-    .upsert(payload)
+    .upsert(payload, { onConflict: 'family_id,user_id' })
     .select('*')
     .single();
 

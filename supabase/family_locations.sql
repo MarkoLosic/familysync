@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS family_locations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   family_id UUID NOT NULL REFERENCES families(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(user_id) ON DELETE CASCADE,
   status TEXT NOT NULL DEFAULT 'away' CHECK (status IN ('home', 'school', 'work', 'away')),
   lat DOUBLE PRECISION,
   lng DOUBLE PRECISION,
@@ -15,19 +15,19 @@ ALTER TABLE family_locations ENABLE ROW LEVEL SECURITY;
 CREATE POLICY family_locations_select_policy ON family_locations
   FOR SELECT
   USING (
-    family_id IN (SELECT family_id FROM profiles WHERE id = auth.uid())
+    family_id IN (SELECT family_id FROM profiles WHERE user_id = auth.uid())
   );
 
 CREATE POLICY family_locations_upsert_policy ON family_locations
   FOR INSERT
   WITH CHECK (
-    family_id IN (SELECT family_id FROM profiles WHERE id = auth.uid())
+    family_id IN (SELECT family_id FROM profiles WHERE user_id = auth.uid())
   );
 
 CREATE POLICY family_locations_update_policy ON family_locations
   FOR UPDATE
   USING (
-    family_id IN (SELECT family_id FROM profiles WHERE id = auth.uid())
+    family_id IN (SELECT family_id FROM profiles WHERE user_id = auth.uid())
   );
 
 CREATE OR REPLACE FUNCTION update_family_locations_updated_at()
