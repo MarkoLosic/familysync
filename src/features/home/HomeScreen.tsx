@@ -97,7 +97,13 @@ export function HomeScreen() {
   const handleTaskStatus = async (task: Task, status: Task['status']) => {
     try {
       setIsLoading(true);
-      const updated = await updateTaskStatus(task.id, status);
+      const completedAt =
+        status === 'waiting_approval' || status === 'completed' ? new Date().toISOString() : null;
+      const approvedAt = status === 'completed' ? new Date().toISOString() : null;
+      const updated = await updateTaskStatus(task.id, status, {
+        completed_at: completedAt,
+        approved_at: approvedAt,
+      });
       setTasks((prev) => prev.map((item) => (item.id === task.id ? updated : item)));
       closeTaskModal();
     } catch (error) {

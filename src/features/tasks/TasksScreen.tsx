@@ -96,9 +96,14 @@ export function TasksScreen() {
   const handleStatusUpdate = async (task: Task, nextStatus: Task['status']) => {
     try {
       setIsLoading(true);
+      const completedAt =
+        nextStatus === 'waiting_approval' || nextStatus === 'completed'
+          ? new Date().toISOString()
+          : null;
+      const approvedAt = nextStatus === 'completed' ? new Date().toISOString() : null;
       const updated = await updateTaskStatus(task.id, nextStatus, {
-        completed_at: nextStatus === 'waiting_approval' ? new Date().toISOString() : null,
-        approved_at: nextStatus === 'completed' ? new Date().toISOString() : null,
+        completed_at: completedAt,
+        approved_at: approvedAt,
       });
       setTasks((prev) => prev.map((item) => (item.id === task.id ? updated : item)));
       void hapticImpactLight();
