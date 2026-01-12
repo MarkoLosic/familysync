@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Mail, Lock, LogIn } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '@/services/supabase';
 import { useAuthStore } from '@/store';
 import type { AuthStackParamList } from '@/navigation/AuthNavigator';
@@ -25,6 +26,8 @@ export function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const insets = useSafeAreaInsets();
+  const bottomInset = Platform.OS === 'ios' ? Math.max(insets.bottom, 16) : 0;
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -58,7 +61,11 @@ export function LoginScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: bottomInset }}
+          keyboardShouldPersistTaps="handled"
+          contentInsetAdjustmentBehavior="never"
+        >
           <View className="flex-1 justify-center px-6 py-10">
             <View className="items-center mb-10">
               <View className="bg-white/90 rounded-full p-6 shadow-md">
@@ -117,6 +124,12 @@ export function LoginScreen() {
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   className="flex-row items-center justify-center py-4"
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minHeight: 56,
+                  }}
                 >
                   {isLoading ? (
                     <ActivityIndicator color="#FFFFFF" />

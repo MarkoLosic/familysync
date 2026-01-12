@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAuthStore } from '@/store';
 import { fetchTasks, updateTaskStatus } from '@/services/tasks';
 import { fetchEvents, updateEvent } from '@/services/calendar';
@@ -49,9 +50,11 @@ export function HomeScreen() {
     }
   };
 
-  useEffect(() => {
-    loadData();
-  }, [family?.id]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadData();
+    }, [family?.id])
+  );
 
   const points = getProfilePoints(profile);
   const nextEvent = events[0];
@@ -243,7 +246,14 @@ export function HomeScreen() {
         </View>
       </View>
 
-      <Modal visible={taskModalVisible} transparent animationType="slide" onRequestClose={closeTaskModal}>
+      <Modal
+        visible={taskModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={closeTaskModal}
+        statusBarTranslucent
+        navigationBarTranslucent
+      >
         <View className="flex-1 bg-black/50 justify-end">
           <View className="bg-white rounded-t-3xl p-6">
             <Text className="text-lg font-semibold text-slate-900">Update task</Text>
@@ -274,7 +284,14 @@ export function HomeScreen() {
         </View>
       </Modal>
 
-      <Modal visible={eventModalVisible} transparent animationType="slide" onRequestClose={closeEventModal}>
+      <Modal
+        visible={eventModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={closeEventModal}
+        statusBarTranslucent
+        navigationBarTranslucent
+      >
         <View className="flex-1 bg-black/50 justify-end">
           <View className="bg-white rounded-t-3xl p-6">
             <Text className="text-lg font-semibold text-slate-900">Update event</Text>
@@ -322,6 +339,8 @@ export function HomeScreen() {
         transparent
         animationType="slide"
         onRequestClose={closeShoppingModal}
+        statusBarTranslucent
+        navigationBarTranslucent
       >
         <View className="flex-1 bg-black/50 justify-end">
           <View className="bg-white rounded-t-3xl p-6">
