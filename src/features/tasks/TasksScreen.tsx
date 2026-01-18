@@ -15,6 +15,14 @@ import { getProfileId } from '@/utils/profile';
 import { hapticError, hapticImpactLight, hapticSuccess } from '@/utils/haptics';
 import type { Task } from '@/types';
 
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && error && 'message' in error) {
+    return String((error as { message?: unknown }).message ?? 'Try again.');
+  }
+  return 'Try again.';
+};
+
 const statusLabel = (status: Task['status']) => {
   switch (status) {
     case 'pending':
@@ -109,7 +117,7 @@ export function TasksScreen() {
       void hapticImpactLight();
     } catch (error) {
       void hapticError();
-      Alert.alert('Update failed', error instanceof Error ? error.message : 'Try again.');
+      Alert.alert('Update failed', getErrorMessage(error));
     } finally {
       setIsLoading(false);
     }

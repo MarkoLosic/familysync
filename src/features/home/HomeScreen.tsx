@@ -18,6 +18,14 @@ import { deleteShoppingItem, fetchShoppingItems, toggleShoppingItem } from '@/se
 import { getProfilePoints } from '@/utils/profile';
 import type { Task, CalendarEvent, ShoppingItem } from '@/types';
 
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && error && 'message' in error) {
+    return String((error as { message?: unknown }).message ?? 'Try again.');
+  }
+  return 'Try again.';
+};
+
 export function HomeScreen() {
   const { profile, family, familyMembers } = useAuthStore();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -107,8 +115,7 @@ export function HomeScreen() {
       setTasks((prev) => prev.map((item) => (item.id === task.id ? updated : item)));
       closeTaskModal();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Try again.';
-      Alert.alert('Update failed', message);
+      Alert.alert('Update failed', getErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
@@ -130,8 +137,7 @@ export function HomeScreen() {
       setEvents((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
       closeEventModal();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Try again.';
-      Alert.alert('Update failed', message);
+      Alert.alert('Update failed', getErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
@@ -143,8 +149,7 @@ export function HomeScreen() {
       await deleteShoppingItem(item.id);
       setShopping((prev) => prev.filter((entry) => entry.id !== item.id));
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Try again.';
-      Alert.alert('Update failed', message);
+      Alert.alert('Update failed', getErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
