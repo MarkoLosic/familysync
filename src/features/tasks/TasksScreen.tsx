@@ -8,12 +8,20 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { CheckCircle2 } from 'lucide-react-native';
+import { CheckCircle2, ListTodo, Plus, Star, Clock } from 'lucide-react-native';
 import { useAuthStore } from '@/store';
 import { createTask, fetchTasks, updateTaskStatus } from '@/services/tasks';
 import { getProfileId } from '@/utils/profile';
 import { hapticError, hapticImpactLight, hapticSuccess } from '@/utils/haptics';
 import type { Task } from '@/types';
+
+// Status colors
+const STATUS_COLORS: Record<Task['status'], { bg: string; text: string; accent: string }> = {
+  pending: { bg: '#3B82F620', text: '#60A5FA', accent: '#3B82F6' },
+  waiting_approval: { bg: '#F59E0B20', text: '#FBBF24', accent: '#F59E0B' },
+  completed: { bg: '#22C55E20', text: '#4ADE80', accent: '#22C55E' },
+  postponed: { bg: '#EF444420', text: '#F87171', accent: '#EF4444' },
+};
 
 const getErrorMessage = (error: unknown) => {
   if (error instanceof Error) return error.message;
@@ -26,17 +34,47 @@ const getErrorMessage = (error: unknown) => {
 const statusLabel = (status: Task['status']) => {
   switch (status) {
     case 'pending':
-      return 'To do';
+      return '○ To do';
     case 'waiting_approval':
-      return 'Awaiting approval';
+      return '⏳ Awaiting approval';
     case 'completed':
-      return 'Completed';
+      return '✓ Completed';
     case 'postponed':
-      return 'Postponed';
+      return '⏸ Postponed';
     default:
       return status;
   }
 };
+
+// Pastel accent circles decoration
+const AccentCircles = () => (
+  <>
+    <View
+      style={{
+        position: 'absolute',
+        top: -50,
+        right: -50,
+        width: 180,
+        height: 180,
+        borderRadius: 90,
+        backgroundColor: '#22C55E',
+        opacity: 0.12,
+      }}
+    />
+    <View
+      style={{
+        position: 'absolute',
+        top: 120,
+        left: -60,
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        backgroundColor: '#3B82F6',
+        opacity: 0.1,
+      }}
+    />
+  </>
+);
 
 export function TasksScreen() {
   const { family, profile } = useAuthStore();
@@ -124,93 +162,245 @@ export function TasksScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-slate-50">
-      <View className="px-6 pt-8 pb-6">
-        <Text className="text-3xl font-bold text-slate-900">Tasks</Text>
-        <Text className="text-base text-slate-600 mt-1">Assign and approve family tasks.</Text>
-      </View>
-
-      <View className="px-6">
-        <View className="bg-white rounded-3xl p-5 shadow-sm">
-          <Text className="text-lg font-semibold text-slate-900">New task</Text>
-          <TextInput
-            className="mt-3 bg-slate-50 rounded-2xl px-4 py-3 text-base text-slate-900"
-            placeholder="Task title"
-            placeholderTextColor="#94A3B8"
-            value={title}
-            onChangeText={setTitle}
-          />
-          <TextInput
-            className="mt-3 bg-slate-50 rounded-2xl px-4 py-3 text-base text-slate-900"
-            placeholder="Task description"
-            placeholderTextColor="#94A3B8"
-            value={description}
-            onChangeText={setDescription}
-          />
-          <TextInput
-            className="mt-3 bg-slate-50 rounded-2xl px-4 py-3 text-base text-slate-900"
-            placeholder="Points"
-            placeholderTextColor="#94A3B8"
-            value={points}
-            onChangeText={setPoints}
-            keyboardType="numeric"
-          />
-          <TouchableOpacity
-            className="mt-4 rounded-2xl bg-purple-600 py-3 items-center"
-            onPress={handleCreate}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text className="text-white font-semibold">Add task</Text>
-            )}
-          </TouchableOpacity>
+    <View style={{ flex: 1, backgroundColor: '#181A20' }}>
+      <AccentCircles />
+      
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 20 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+            <View
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                backgroundColor: '#22C55E',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: 12,
+              }}
+            >
+              <ListTodo size={24} color="#FFFFFF" />
+            </View>
+            <View>
+              <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#FFFFFF' }}>Tasks</Text>
+              <Text style={{ fontSize: 14, color: '#A1A1AA', marginTop: 2 }}>
+                Assign and approve tasks ✅
+              </Text>
+            </View>
+          </View>
         </View>
-      </View>
 
-      <View className="px-6 mt-6 pb-10">
-        <View className="bg-white rounded-3xl p-5 shadow-sm">
-          <Text className="text-lg font-semibold text-slate-900">Task list</Text>
-          <View className="mt-4 gap-3">
-            {tasks.map((task) => (
-              <View key={task.id} className="bg-slate-50 rounded-2xl px-4 py-3">
-                <View className="flex-row items-center justify-between">
-                  <View>
-                    <Text className="text-slate-900 font-medium">{task.title}</Text>
-                    <Text className="text-xs text-slate-500 mt-1">{statusLabel(task.status)}</Text>
-                  </View>
-                  <View className="flex-row items-center">
-                    <Text className="text-sm font-semibold text-purple-600 mr-2">
-                      {task.points_value ?? 0} pts
-                    </Text>
-                    <CheckCircle2 size={18} color="#7C3AED" />
-                  </View>
-                </View>
-                <View className="mt-3 flex-row gap-2">
-                  <TouchableOpacity
-                    className="flex-1 items-center rounded-xl bg-emerald-100 py-2"
-                    onPress={() => handleStatusUpdate(task, 'completed')}
-                    disabled={isLoading}
-                  >
-                    <Text className="text-emerald-700 font-semibold">Done</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    className="flex-1 items-center rounded-xl bg-amber-100 py-2"
-                    onPress={() => handleStatusUpdate(task, 'postponed')}
-                    disabled={isLoading}
-                  >
-                    <Text className="text-amber-700 font-semibold">Postpone</Text>
-                  </TouchableOpacity>
-                </View>
+        {/* Create Task Card */}
+        <View style={{ paddingHorizontal: 24 }}>
+          <View
+            style={{
+              backgroundColor: '#23262F',
+              borderRadius: 24,
+              padding: 20,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 8,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+              <Plus size={20} color="#22C55E" />
+              <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFFFFF', marginLeft: 8 }}>
+                New Task
+              </Text>
+            </View>
+            
+            <TextInput
+              style={{
+                backgroundColor: '#181A20',
+                borderRadius: 16,
+                paddingHorizontal: 16,
+                paddingVertical: 14,
+                fontSize: 16,
+                color: '#FFFFFF',
+                borderWidth: 1,
+                borderColor: '#3F3F46',
+              }}
+              placeholder="Task title"
+              placeholderTextColor="#71717A"
+              value={title}
+              onChangeText={setTitle}
+            />
+            
+            <TextInput
+              style={{
+                backgroundColor: '#181A20',
+                borderRadius: 16,
+                paddingHorizontal: 16,
+                paddingVertical: 14,
+                fontSize: 16,
+                color: '#FFFFFF',
+                borderWidth: 1,
+                borderColor: '#3F3F46',
+                marginTop: 12,
+              }}
+              placeholder="Description (optional)"
+              placeholderTextColor="#71717A"
+              value={description}
+              onChangeText={setDescription}
+            />
+            
+            <View
+              style={{
+                backgroundColor: '#181A20',
+                borderRadius: 16,
+                paddingHorizontal: 16,
+                paddingVertical: 14,
+                marginTop: 12,
+                borderWidth: 1,
+                borderColor: '#3F3F46',
+                flexDirection: 'row',
+                alignItems: 'center',
+              }}
+            >
+              <Star size={18} color="#FBBF24" />
+              <TextInput
+                style={{
+                  flex: 1,
+                  fontSize: 16,
+                  color: '#FFFFFF',
+                  marginLeft: 10,
+                }}
+                placeholder="Points"
+                placeholderTextColor="#71717A"
+                value={points}
+                onChangeText={setPoints}
+                keyboardType="numeric"
+              />
+              <Text style={{ color: '#71717A' }}>pts</Text>
+            </View>
+            
+            <TouchableOpacity
+              style={{
+                marginTop: 16,
+                borderRadius: 16,
+                backgroundColor: '#22C55E',
+                paddingVertical: 14,
+                alignItems: 'center',
+                shadowColor: '#22C55E',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 4,
+              }}
+              onPress={handleCreate}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>Add Task</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Tasks List */}
+        <View style={{ paddingHorizontal: 24, marginTop: 20, paddingBottom: 40 }}>
+          <View
+            style={{
+              backgroundColor: '#23262F',
+              borderRadius: 24,
+              padding: 20,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 8,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+              <CheckCircle2 size={20} color="#60A5FA" />
+              <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFFFFF', marginLeft: 8 }}>
+                Task List
+              </Text>
+            </View>
+            
+            {tasks.length === 0 ? (
+              <View style={{ alignItems: 'center', paddingVertical: 24 }}>
+                <Text style={{ fontSize: 40, marginBottom: 12 }}>📋</Text>
+                <Text style={{ fontSize: 14, color: '#71717A' }}>No tasks yet. Add your first one!</Text>
               </View>
-            ))}
-            {tasks.length === 0 && (
-              <Text className="text-sm text-slate-500">No tasks yet.</Text>
+            ) : (
+              <View style={{ gap: 12 }}>
+                {tasks.map((task) => {
+                  const statusColor = STATUS_COLORS[task.status];
+                  return (
+                    <View
+                      key={task.id}
+                      style={{
+                        backgroundColor: statusColor.bg,
+                        borderRadius: 20,
+                        padding: 16,
+                        borderLeftWidth: 4,
+                        borderLeftColor: statusColor.accent,
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>
+                            {task.title}
+                          </Text>
+                          <Text style={{ fontSize: 12, color: statusColor.text, marginTop: 4 }}>
+                            {statusLabel(task.status)}
+                          </Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Star size={14} color="#FBBF24" fill="#FBBF24" />
+                          <Text style={{ fontSize: 14, fontWeight: '600', color: '#FBBF24', marginLeft: 4 }}>
+                            {task.points_value ?? 0}
+                          </Text>
+                        </View>
+                      </View>
+                      
+                      {/* Action Buttons */}
+                      <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+                        <TouchableOpacity
+                          style={{
+                            flex: 1,
+                            backgroundColor: '#22C55E20',
+                            borderRadius: 12,
+                            paddingVertical: 10,
+                            alignItems: 'center',
+                            borderWidth: 1,
+                            borderColor: '#22C55E40',
+                          }}
+                          onPress={() => handleStatusUpdate(task, 'completed')}
+                          disabled={isLoading}
+                        >
+                          <Text style={{ color: '#4ADE80', fontWeight: '600' }}>✓ Done</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={{
+                            flex: 1,
+                            backgroundColor: '#F59E0B20',
+                            borderRadius: 12,
+                            paddingVertical: 10,
+                            alignItems: 'center',
+                            borderWidth: 1,
+                            borderColor: '#F59E0B40',
+                          }}
+                          onPress={() => handleStatusUpdate(task, 'postponed')}
+                          disabled={isLoading}
+                        >
+                          <Text style={{ color: '#FBBF24', fontWeight: '600' }}>⏸ Later</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
             )}
           </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }

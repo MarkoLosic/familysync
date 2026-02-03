@@ -54,6 +54,7 @@ export type CalendarEvent = {
   created_by: string;
   created_at?: string;
   updated_at?: string;
+  status?: 'pending' | 'done';
 };
 
 export type ShoppingItem = {

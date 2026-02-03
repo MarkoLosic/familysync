@@ -29,18 +29,18 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#7C3AED',
-        tabBarInactiveTintColor: '#94A3B8',
+        tabBarActiveTintColor: '#A78BFA',
+        tabBarInactiveTintColor: '#6B7280',
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: '#181A20',
           borderTopWidth: 1,
-          borderTopColor: '#E2E8F0',
-          height: 72,
-          paddingTop: 8,
-          paddingBottom: 10,
+          borderTopColor: '#23262F',
+          height: 85,
+          paddingTop: 12,
+          paddingBottom: 24,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: '600',
         },
       }}

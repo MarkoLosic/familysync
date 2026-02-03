@@ -100,112 +100,240 @@ export function ProfileScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-slate-50">
-      <View className="px-6 pt-8 pb-6">
-        <Text className="text-3xl font-bold text-slate-900">Profile</Text>
-        <Text className="text-base text-slate-600 mt-1">Manage your family details.</Text>
-      </View>
+    <View style={{ flex: 1, backgroundColor: '#0F0F0F' }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 100 }}>
+        {/* Dekorativni krugovi */}
+        <View style={{ position: 'absolute', top: 50, right: 30, width: 50, height: 50, borderRadius: 25, backgroundColor: '#C4F5A9', opacity: 0.4 }} />
+        <View style={{ position: 'absolute', top: 120, left: -15, width: 40, height: 40, borderRadius: 20, backgroundColor: '#F5C4DE', opacity: 0.4 }} />
 
-      <View className="px-6">
-        <View className="bg-white rounded-3xl p-5 shadow-sm">
-          <Text className="text-lg font-semibold text-slate-900">Your info</Text>
-          <View className="mt-3 gap-2">
-            <Text className="text-slate-700">Name: {profile?.name ?? '-'}</Text>
-            <Text className="text-slate-700">Role: {profile?.role ?? '-'}</Text>
-            <Text className="text-slate-700">Points: {getProfilePoints(profile)}</Text>
+        <View style={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 20 }}>
+          <Text style={{ color: '#FFFFFF', fontSize: 28, fontWeight: '700' }}>Profile 👤</Text>
+          <Text style={{ color: '#6B7280', fontSize: 16, marginTop: 8 }}>Manage your family details.</Text>
+        </View>
+
+        {/* User Info Card */}
+        <View style={{ paddingHorizontal: 24 }}>
+          <View style={{ 
+            backgroundColor: '#1A1A1A', 
+            borderRadius: 24, 
+            padding: 20,
+            borderWidth: 1,
+            borderColor: '#2A2A2A',
+            alignItems: 'center'
+          }}>
+            <View style={{
+              width: 80,
+              height: 80,
+              borderRadius: 40,
+              backgroundColor: '#7C3AED',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 16
+            }}>
+              <Text style={{ fontSize: 36 }}>👤</Text>
+            </View>
+            <Text style={{ color: '#FFFFFF', fontSize: 22, fontWeight: '700' }}>{profile?.name ?? 'User'}</Text>
+            <View style={{ 
+              backgroundColor: '#7C3AED', 
+              borderRadius: 12, 
+              paddingHorizontal: 12, 
+              paddingVertical: 4,
+              marginTop: 8
+            }}>
+              <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '600' }}>{profile?.role ?? 'Member'}</Text>
+            </View>
+            <Text style={{ color: '#FFFFFF', fontSize: 36, fontWeight: '800', marginTop: 16 }}>{getProfilePoints(profile)}</Text>
+            <Text style={{ color: '#6B7280', fontSize: 14 }}>Total Points</Text>
           </View>
         </View>
-      </View>
 
-      <View className="px-6 mt-6">
-        <View className="bg-white rounded-3xl p-5 shadow-sm">
-          <Text className="text-lg font-semibold text-slate-900">Family</Text>
-          <Text className="text-slate-700 mt-2">{family?.name ?? 'No family yet'}</Text>
-          <View className="mt-4">
-            <Text className="text-sm text-slate-500">Invite code</Text>
-            <View className="flex-row items-center justify-between mt-2 bg-slate-50 rounded-2xl px-4 py-3">
-              <Text className="text-slate-900 font-semibold">
+        {/* Family Card */}
+        <View style={{ paddingHorizontal: 24, marginTop: 20 }}>
+          <View style={{ 
+            backgroundColor: '#1A1A1A', 
+            borderRadius: 24, 
+            padding: 20,
+            borderWidth: 1,
+            borderColor: '#2A2A2A'
+          }}>
+            <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600' }}>Family</Text>
+            <Text style={{ color: '#9CA3AF', fontSize: 16, marginTop: 8 }}>{family?.name ?? 'No family yet'}</Text>
+            
+            <Text style={{ color: '#6B7280', fontSize: 13, marginTop: 16 }}>Invite code</Text>
+            <View style={{ 
+              backgroundColor: '#0F0F0F', 
+              borderRadius: 16, 
+              paddingHorizontal: 16, 
+              paddingVertical: 14,
+              marginTop: 8,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              borderWidth: 1,
+              borderColor: '#2A2A2A'
+            }}>
+              <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>
                 {isLoading ? 'Loading...' : inviteCode ?? 'Not available'}
               </Text>
               <TouchableOpacity onPress={handleCopy} disabled={!inviteCode}>
-                <Copy size={18} color={inviteCode ? '#7C3AED' : '#CBD5F5'} />
+                <Copy size={20} color={inviteCode ? '#7C3AED' : '#4B5563'} />
               </TouchableOpacity>
             </View>
           </View>
         </View>
-      </View>
 
-      <View className="px-6 mt-6">
-        <View className="bg-white rounded-3xl p-5 shadow-sm">
-          <Text className="text-lg font-semibold text-slate-900">Profile settings</Text>
-          <TextInput
-            className="mt-3 bg-slate-50 rounded-2xl px-4 py-3 text-base text-slate-900"
-            placeholder="Username"
-            placeholderTextColor="#94A3B8"
-            value={username}
-            onChangeText={setUsername}
-          />
-          <TouchableOpacity
-            className="mt-4 rounded-2xl bg-purple-600 py-3 items-center"
-            onPress={handleUpdateProfile}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text className="text-white font-semibold">Update username</Text>
-            )}
-          </TouchableOpacity>
-          <TextInput
-            className="mt-4 bg-slate-50 rounded-2xl px-4 py-3 text-base text-slate-900"
-            placeholder="New password"
-            placeholderTextColor="#94A3B8"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-          <TouchableOpacity
-            className="mt-4 rounded-2xl bg-slate-900 py-3 items-center"
-            onPress={handlePasswordChange}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text className="text-white font-semibold">Change password</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
+        {/* Settings Card */}
+        <View style={{ paddingHorizontal: 24, marginTop: 20 }}>
+          <View style={{ 
+            backgroundColor: '#1A1A1A', 
+            borderRadius: 24, 
+            padding: 20,
+            borderWidth: 1,
+            borderColor: '#2A2A2A'
+          }}>
+            <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600' }}>Settings</Text>
+            
+            <View style={{ 
+              backgroundColor: '#0F0F0F', 
+              borderRadius: 16, 
+              paddingHorizontal: 16, 
+              paddingVertical: 14,
+              marginTop: 16,
+              borderWidth: 1,
+              borderColor: '#2A2A2A'
+            }}>
+              <TextInput
+                style={{ fontSize: 16, color: '#FFFFFF' }}
+                placeholder="Username"
+                placeholderTextColor="#6B7280"
+                value={username}
+                onChangeText={setUsername}
+              />
+            </View>
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#7C3AED',
+                borderRadius: 16,
+                paddingVertical: 16,
+                alignItems: 'center',
+                marginTop: 12,
+              }}
+              onPress={handleUpdateProfile}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>Update username</Text>
+              )}
+            </TouchableOpacity>
 
-      <View className="px-6 mt-6">
-        <View className="bg-white rounded-3xl p-5 shadow-sm">
-          <Text className="text-lg font-semibold text-slate-900">Members</Text>
-          <View className="mt-4 gap-2">
-            {familyMembers.map((member) => (
-              <View key={member.id} className="bg-slate-50 rounded-2xl px-4 py-3">
-                <Text className="text-slate-900 font-medium">{member.name}</Text>
-                <Text className="text-xs text-slate-500 mt-1">{member.role}</Text>
-              </View>
-            ))}
-            {familyMembers.length === 0 && (
-              <Text className="text-sm text-slate-500">No members yet.</Text>
-            )}
+            <View style={{ 
+              backgroundColor: '#0F0F0F', 
+              borderRadius: 16, 
+              paddingHorizontal: 16, 
+              paddingVertical: 14,
+              marginTop: 16,
+              borderWidth: 1,
+              borderColor: '#2A2A2A'
+            }}>
+              <TextInput
+                style={{ fontSize: 16, color: '#FFFFFF' }}
+                placeholder="New password"
+                placeholderTextColor="#6B7280"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
+            </View>
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#374151',
+                borderRadius: 16,
+                paddingVertical: 16,
+                alignItems: 'center',
+                marginTop: 12,
+              }}
+              onPress={handlePasswordChange}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>Change password</Text>
+              )}
+            </TouchableOpacity>
           </View>
         </View>
-      </View>
 
-      <View className="px-6 mt-6 pb-10">
-        <TouchableOpacity
-          className="rounded-2xl bg-slate-900 py-4 items-center"
-          onPress={handleSignOut}
-        >
-          <View className="flex-row items-center">
-            <LogOut size={18} color="#FFFFFF" />
-            <Text className="text-white font-semibold ml-2">Sign out</Text>
+        {/* Members Card */}
+        <View style={{ paddingHorizontal: 24, marginTop: 20 }}>
+          <View style={{ 
+            backgroundColor: '#1A1A1A', 
+            borderRadius: 24, 
+            padding: 20,
+            borderWidth: 1,
+            borderColor: '#2A2A2A'
+          }}>
+            <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600' }}>Members</Text>
+            <View style={{ marginTop: 16, gap: 12 }}>
+              {familyMembers.map((member, index) => {
+                const colors = ['#BBF7D0', '#FBCFE8', '#FEF08A', '#DBEAFE'];
+                const bgColor = colors[index % colors.length];
+                return (
+                  <View 
+                    key={member.id} 
+                    style={{
+                      backgroundColor: bgColor,
+                      borderRadius: 16,
+                      paddingHorizontal: 16,
+                      paddingVertical: 14,
+                      flexDirection: 'row',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <View style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
+                      backgroundColor: 'rgba(255,255,255,0.8)',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <Text style={{ fontSize: 20 }}>👤</Text>
+                    </View>
+                    <View style={{ marginLeft: 12 }}>
+                      <Text style={{ color: '#1F2937', fontWeight: '600', fontSize: 16 }}>{member.name}</Text>
+                      <Text style={{ color: '#4B5563', fontSize: 12, marginTop: 2 }}>{member.role}</Text>
+                    </View>
+                  </View>
+                );
+              })}
+              {familyMembers.length === 0 && (
+                <Text style={{ color: '#6B7280', fontSize: 14 }}>No members yet.</Text>
+              )}
+            </View>
           </View>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+        </View>
+
+        {/* Sign Out */}
+        <View style={{ paddingHorizontal: 24, marginTop: 20 }}>
+          <TouchableOpacity
+            style={{
+              backgroundColor: '#DC2626',
+              borderRadius: 16,
+              paddingVertical: 18,
+              alignItems: 'center',
+              flexDirection: 'row',
+              justifyContent: 'center',
+            }}
+            onPress={handleSignOut}
+          >
+            <LogOut size={20} color="#FFFFFF" />
+            <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16, marginLeft: 8 }}>Sign out</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </View>
   );
 }

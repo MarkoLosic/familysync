@@ -94,63 +94,110 @@ export function ShoppingScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-slate-50">
-      <View className="px-6 pt-8 pb-6">
-        <Text className="text-3xl font-bold text-slate-900">Shopping</Text>
-        <Text className="text-base text-slate-600 mt-1">Keep the pantry stocked together.</Text>
-      </View>
+    <View style={{ flex: 1, backgroundColor: '#0F0F0F' }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 100 }}>
+        {/* Dekorativni krugovi */}
+        <View style={{ position: 'absolute', top: 50, right: -20, width: 60, height: 60, borderRadius: 30, backgroundColor: '#FEF3C7', opacity: 0.4 }} />
+        <View style={{ position: 'absolute', top: 120, left: 20, width: 30, height: 30, borderRadius: 15, backgroundColor: '#C4F5A9', opacity: 0.4 }} />
 
-      <View className="px-6">
-        <View className="bg-white rounded-3xl p-5 shadow-sm">
-          <Text className="text-lg font-semibold text-slate-900">Add item</Text>
-          <TextInput
-            className="mt-3 bg-slate-50 rounded-2xl px-4 py-3 text-base text-slate-900"
-            placeholder="Milk, bread, apples..."
-            placeholderTextColor="#94A3B8"
-            value={title}
-            onChangeText={setTitle}
-          />
-          <TouchableOpacity
-            className="mt-4 rounded-2xl bg-purple-600 py-3 items-center"
-            onPress={handleCreate}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text className="text-white font-semibold">Add to list</Text>
-            )}
-          </TouchableOpacity>
+        <View style={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 20 }}>
+          <Text style={{ color: '#FFFFFF', fontSize: 28, fontWeight: '700' }}>Shopping 🛒</Text>
+          <Text style={{ color: '#6B7280', fontSize: 16, marginTop: 8 }}>Keep the pantry stocked together.</Text>
         </View>
-      </View>
 
-      <View className="px-6 mt-6 pb-10">
-        <View className="bg-white rounded-3xl p-5 shadow-sm">
-          <Text className="text-lg font-semibold text-slate-900">Your list</Text>
-          <View className="mt-4 gap-3">
-            {items.map((item) => {
-              const checked = item.is_checked ?? false;
-              return (
-                <TouchableOpacity
-                  key={item.id}
-                  className={`rounded-2xl px-4 py-3 ${checked ? 'bg-emerald-50' : 'bg-slate-50'}`}
-                  onPress={() => handleToggle(item)}
-                >
-                  <View className="flex-row items-center justify-between">
-                    <Text className={`font-medium ${checked ? 'text-emerald-700' : 'text-slate-900'}`}>
-                      {item.title || item.name}
-                    </Text>
-                    <ShoppingCart size={18} color={checked ? '#10B981' : '#64748B'} />
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-            {items.length === 0 && (
-              <Text className="text-sm text-slate-500">No items yet.</Text>
-            )}
+        <View style={{ paddingHorizontal: 24 }}>
+          <View style={{ 
+            backgroundColor: '#1A1A1A', 
+            borderRadius: 24, 
+            padding: 20,
+            borderWidth: 1,
+            borderColor: '#2A2A2A'
+          }}>
+            <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600' }}>Add item</Text>
+            <View style={{ 
+              backgroundColor: '#0F0F0F', 
+              borderRadius: 16, 
+              paddingHorizontal: 16, 
+              paddingVertical: 14,
+              marginTop: 16,
+              borderWidth: 1,
+              borderColor: '#2A2A2A'
+            }}>
+              <TextInput
+                style={{ fontSize: 16, color: '#FFFFFF' }}
+                placeholder="Milk, bread, apples..."
+                placeholderTextColor="#6B7280"
+                value={title}
+                onChangeText={setTitle}
+              />
+            </View>
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#7C3AED',
+                borderRadius: 16,
+                paddingVertical: 16,
+                alignItems: 'center',
+                marginTop: 16,
+              }}
+              onPress={handleCreate}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>Add to list</Text>
+              )}
+            </TouchableOpacity>
           </View>
         </View>
-      </View>
-    </ScrollView>
+
+        <View style={{ paddingHorizontal: 24, marginTop: 24 }}>
+          <View style={{ 
+            backgroundColor: '#1A1A1A', 
+            borderRadius: 24, 
+            padding: 20,
+            borderWidth: 1,
+            borderColor: '#2A2A2A'
+          }}>
+            <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600' }}>Your list</Text>
+            <View style={{ marginTop: 16, gap: 12 }}>
+              {items.map((item) => {
+                const checked = item.is_checked ?? false;
+                return (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={{
+                      backgroundColor: checked ? '#064E3B' : '#0F0F0F',
+                      borderRadius: 16,
+                      paddingHorizontal: 16,
+                      paddingVertical: 14,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      borderWidth: 1,
+                      borderColor: checked ? '#10B981' : '#2A2A2A',
+                    }}
+                    onPress={() => handleToggle(item)}
+                  >
+                    <Text style={{ 
+                      color: checked ? '#10B981' : '#FFFFFF', 
+                      fontWeight: '500', 
+                      fontSize: 16,
+                      textDecorationLine: checked ? 'line-through' : 'none'
+                    }}>
+                      {item.title || item.name}
+                    </Text>
+                    <ShoppingCart size={18} color={checked ? '#10B981' : '#6B7280'} />
+                  </TouchableOpacity>
+                );
+              })}
+              {items.length === 0 && (
+                <Text style={{ color: '#6B7280', fontSize: 14 }}>No items yet.</Text>
+              )}
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </View>
   );
 }

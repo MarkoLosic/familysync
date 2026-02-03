@@ -1,4 +1,4 @@
-# 👨‍👩‍👧‍👦 FamilySync
+# 👨‍👩‍👧‍👦 Spona
 
 > A beautiful, gamified family task and reward management app built with **React Native Expo SDK 54** and **NativeWind v4**
 

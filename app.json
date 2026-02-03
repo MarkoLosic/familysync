@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "FamilySync",
-    "slug": "familysync",
+    "name": "Spona",
+    "slug": "spona",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -11,11 +11,13 @@
       "resizeMode": "contain",
       "backgroundColor": "#F3F4FF"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "FamilySync uses your location to show your family map."
+        "NSLocationWhenInUseUsageDescription": "Spona uses your location to show your family map."
       }
     },
     "android": {
@@ -30,6 +32,10 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "description": "Spona uses your location to show your family map.",
+    "plugins": [
+      "expo-font"
+    ]
   }
 }

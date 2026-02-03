@@ -68,7 +68,7 @@ export function LocationsScreen() {
         if (family?.id && profile) {
           const updated = await upsertLocation({
             family_id: family.id,
-            user_id: profile.id ?? profile.user_id ?? '',
+            user_id: profile.user_id ?? '', // KORISTI SAMO user_id
             status: currentStatus,
             lat: coords.lat,
             lng: coords.lng,
@@ -96,7 +96,7 @@ export function LocationsScreen() {
             try {
               const updated = await upsertLocation({
                 family_id: family.id,
-                user_id: profile.id ?? profile.user_id ?? '',
+                user_id: profile.user_id ?? '', // KORISTI SAMO user_id
                 status: currentStatus,
                 lat: coords.lat,
                 lng: coords.lng,
@@ -130,7 +130,7 @@ export function LocationsScreen() {
       setCurrentStatus(status);
       const updated = await upsertLocation({
         family_id: family.id,
-        user_id: profile.id ?? profile.user_id ?? '',
+        user_id: profile.user_id ?? '', // KORISTI SAMO user_id
         status,
         lat: currentCoords?.lat ?? null,
         lng: currentCoords?.lng ?? null,
@@ -167,89 +167,153 @@ export function LocationsScreen() {
   }, [markerLocations]);
 
   return (
-    <ScrollView className="flex-1 bg-slate-50">
-      <View className="px-6 pt-8 pb-6">
-        <Text className="text-3xl font-bold text-slate-900">Family map</Text>
-        <Text className="text-base text-slate-600 mt-1">Track where everyone is right now.</Text>
-      </View>
+    <View style={{ flex: 1, backgroundColor: '#0F0F0F' }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 100 }}>
+        {/* Dekorativni krugovi */}
+        <View style={{ position: 'absolute', top: 50, right: -10, width: 60, height: 60, borderRadius: 30, backgroundColor: '#C4DEF5', opacity: 0.4 }} />
+        <View style={{ position: 'absolute', top: 130, left: 20, width: 35, height: 35, borderRadius: 18, backgroundColor: '#C4F5A9', opacity: 0.4 }} />
 
-      <View className="px-6">
-        <View className="bg-white rounded-3xl p-5 shadow-sm">
-          <Text className="text-lg font-semibold text-slate-900 mb-3">Live map</Text>
-          <View className="rounded-2xl overflow-hidden h-64">
-            <MapView
-              style={{ flex: 1 }}
-              initialRegion={initialRegion}
-              provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
-              showsUserLocation
-              showsMyLocationButton={Platform.OS === 'android'}
-            >
-              {markerLocations.map((item) => (
-                <Marker
-                  key={item.id}
-                  coordinate={{ latitude: item.lat as number, longitude: item.lng as number }}
-                  title={familyMembers.find((member) => member.id === item.user_id)?.name ?? 'Member'}
-                  description={item.status}
-                />
-              ))}
-            </MapView>
-          </View>
-          {markerLocations.length === 0 && (
-            <Text className="text-sm text-slate-500 mt-3">
-              No GPS data yet. Status updates will appear here once lat/lng is provided.
-            </Text>
-          )}
+        <View style={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 20 }}>
+          <Text style={{ color: '#FFFFFF', fontSize: 28, fontWeight: '700' }}>Family Map 📍</Text>
+          <Text style={{ color: '#6B7280', fontSize: 16, marginTop: 8 }}>Track where everyone is right now.</Text>
+        </View>
 
-          <Text className="text-lg font-semibold text-slate-900 mt-6">Update your status</Text>
-          {currentCoords && (
-            <Text className="text-xs text-slate-500 mt-2">
-              GPS: {currentCoords.lat.toFixed(4)}, {currentCoords.lng.toFixed(4)}
-            </Text>
-          )}
-          <View className="flex-row flex-wrap gap-3 mt-4">
-            {(['home', 'work', 'school', 'away'] as LocationStatus[]).map((status) => (
-              <TouchableOpacity
-                key={status}
-                className="bg-slate-50 rounded-2xl px-4 py-3 flex-row items-center"
-                onPress={() => handleStatusUpdate(status)}
-                disabled={isLoading}
+        <View style={{ paddingHorizontal: 24 }}>
+          <View style={{ 
+            backgroundColor: '#1A1A1A', 
+            borderRadius: 24, 
+            padding: 20,
+            borderWidth: 1,
+            borderColor: '#2A2A2A'
+          }}>
+            <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600', marginBottom: 16 }}>Live map</Text>
+            <View style={{ borderRadius: 16, overflow: 'hidden', height: 220 }}>
+              <MapView
+                style={{ flex: 1 }}
+                initialRegion={initialRegion}
+                provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
+                showsUserLocation
+                showsMyLocationButton={Platform.OS === 'android'}
               >
-                {statusIcon(status)}
-                <Text className="text-slate-700 font-medium ml-2 capitalize">{status}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </View>
-
-      <View className="px-6 mt-6 pb-10">
-        <View className="bg-white rounded-3xl p-5 shadow-sm">
-          <Text className="text-lg font-semibold text-slate-900">Live status</Text>
-          {isLoading && <ActivityIndicator color="#7C3AED" className="mt-4" />}
-          <View className="mt-4 gap-3">
-            {familyMembers.map((member) => {
-              const current = locationByUser.get(member.id);
-              const status = current?.status ?? 'away';
-              return (
-                <View key={member.id} className="bg-slate-50 rounded-2xl px-4 py-3">
-                  <View className="flex-row items-center justify-between">
-                    <View>
-                      <Text className="text-slate-900 font-medium">{member.name}</Text>
-                      <Text className="text-xs text-slate-500 mt-1 capitalize">{status}</Text>
-                    </View>
-                    <View className="flex-row items-center">
-                      <MapPin size={18} color="#7C3AED" />
-                    </View>
-                  </View>
-                </View>
-              );
-            })}
-            {familyMembers.length === 0 && (
-              <Text className="text-sm text-slate-500">No members yet.</Text>
+                {markerLocations.map((item) => (
+                  <Marker
+                    key={item.id}
+                    coordinate={{ latitude: item.lat as number, longitude: item.lng as number }}
+                    title={familyMembers.find((member) => member.id === item.user_id)?.name ?? 'Member'}
+                    description={item.status}
+                  />
+                ))}
+              </MapView>
+            </View>
+            {markerLocations.length === 0 && (
+              <Text style={{ color: '#6B7280', fontSize: 13, marginTop: 12 }}>
+                No GPS data yet. Status updates will appear here once lat/lng is provided.
+              </Text>
             )}
+
+            <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600', marginTop: 24 }}>Update your status</Text>
+            {currentCoords && (
+              <Text style={{ color: '#6B7280', fontSize: 12, marginTop: 8 }}>
+                GPS: {currentCoords.lat.toFixed(4)}, {currentCoords.lng.toFixed(4)}
+              </Text>
+            )}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 16 }}>
+              {(['home', 'work', 'school', 'away'] as LocationStatus[]).map((status) => {
+                const isActive = currentStatus === status;
+                const colors: Record<LocationStatus, string> = {
+                  home: '#BBF7D0',
+                  work: '#DBEAFE',
+                  school: '#FED7AA',
+                  away: '#E5E7EB'
+                };
+                return (
+                  <TouchableOpacity
+                    key={status}
+                    style={{
+                      backgroundColor: isActive ? colors[status] : '#0F0F0F',
+                      borderRadius: 16,
+                      paddingHorizontal: 16,
+                      paddingVertical: 12,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      borderWidth: 1,
+                      borderColor: isActive ? colors[status] : '#2A2A2A',
+                    }}
+                    onPress={() => handleStatusUpdate(status)}
+                    disabled={isLoading}
+                  >
+                    {statusIcon(status)}
+                    <Text style={{ 
+                      color: isActive ? '#1F2937' : '#9CA3AF', 
+                      fontWeight: '600', 
+                      marginLeft: 8, 
+                      textTransform: 'capitalize' 
+                    }}>
+                      {status}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
         </View>
-      </View>
-    </ScrollView>
+
+        <View style={{ paddingHorizontal: 24, marginTop: 24 }}>
+          <View style={{ 
+            backgroundColor: '#1A1A1A', 
+            borderRadius: 24, 
+            padding: 20,
+            borderWidth: 1,
+            borderColor: '#2A2A2A'
+          }}>
+            <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600' }}>Live status</Text>
+            {isLoading && <ActivityIndicator color="#7C3AED" style={{ marginTop: 16 }} />}
+            <View style={{ marginTop: 16, gap: 12 }}>
+              {familyMembers.map((member, index) => {
+                const current = locationByUser.get(member.id);
+                const status = current?.status ?? 'away';
+                const colors = ['#BBF7D0', '#FBCFE8', '#FEF08A', '#DBEAFE'];
+                const bgColor = colors[index % colors.length];
+                return (
+                  <View 
+                    key={member.id} 
+                    style={{
+                      backgroundColor: bgColor,
+                      borderRadius: 16,
+                      paddingHorizontal: 16,
+                      paddingVertical: 14,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between'
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 20,
+                        backgroundColor: 'rgba(255,255,255,0.8)',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <Text style={{ fontSize: 20 }}>👤</Text>
+                      </View>
+                      <View style={{ marginLeft: 12 }}>
+                        <Text style={{ color: '#1F2937', fontWeight: '600', fontSize: 16 }}>{member.name}</Text>
+                        <Text style={{ color: '#4B5563', fontSize: 12, marginTop: 2, textTransform: 'capitalize' }}>{status}</Text>
+                      </View>
+                    </View>
+                    <MapPin size={20} color="#7C3AED" />
+                  </View>
+                );
+              })}
+              {familyMembers.length === 0 && (
+                <Text style={{ color: '#6B7280', fontSize: 14 }}>No members yet.</Text>
+              )}
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </View>
   );
 }

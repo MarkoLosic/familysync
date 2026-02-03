@@ -10,14 +10,34 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Mail, Lock, LogIn } from 'lucide-react-native';
+import { Mail, Lock } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '@/services/supabase';
 import { useAuthStore } from '@/store';
 import type { AuthStackParamList } from '@/navigation/AuthNavigator';
+
+// Avatar komponenta za 3D stil
+const Avatar = ({ emoji, size = 60, color = '#FFD93D' }: { emoji: string; size?: number; color?: string }) => (
+  <View
+    style={{
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      backgroundColor: color,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: color,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.4,
+      shadowRadius: 8,
+      elevation: 8,
+    }}
+  >
+    <Text style={{ fontSize: size * 0.5 }}>{emoji}</Text>
+  </View>
+);
 
 export function LoginScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
@@ -56,7 +76,7 @@ export function LoginScreen() {
   };
 
   return (
-    <LinearGradient colors={['#FDF2F8', '#EDE9FE', '#E0F2FE']} style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: '#0F0F0F' }}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
@@ -66,92 +86,124 @@ export function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           contentInsetAdjustmentBehavior="never"
         >
-          <View className="flex-1 justify-center px-6 py-10">
-            <View className="items-center mb-10">
-              <View className="bg-white/90 rounded-full p-6 shadow-md">
-                <Text className="text-5xl">👨‍👩‍👧‍👦</Text>
+          {/* Dekorativni krugovi */}
+          <View style={{ position: 'absolute', top: 60, left: -30, width: 80, height: 80, borderRadius: 40, backgroundColor: '#C4F5A9', opacity: 0.6 }} />
+          <View style={{ position: 'absolute', top: 120, right: 20, width: 40, height: 40, borderRadius: 20, backgroundColor: '#F5C4DE', opacity: 0.6 }} />
+          <View style={{ position: 'absolute', bottom: 200, right: -20, width: 60, height: 60, borderRadius: 30, backgroundColor: '#C4DEF5', opacity: 0.5 }} />
+
+          <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 40 }}>
+            {/* Avatari */}
+            <View style={{ alignItems: 'center', marginBottom: 32 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 20, height: 100 }}>
+                <View style={{ position: 'absolute', left: 80, top: 0 }}>
+                  <Avatar emoji="👧" size={50} color="#F5D0A9" />
+                </View>
+                <Avatar emoji="👨" size={80} color="#FFD93D" />
+                <View style={{ position: 'absolute', right: 80, top: 0 }}>
+                  <Avatar emoji="👩" size={50} color="#F5A9C4" />
+                </View>
               </View>
-              <Text className="text-3xl font-bold text-slate-900 mt-6">Welcome back</Text>
-              <Text className="text-base text-slate-600 mt-2 text-center">
-                Sign in to keep the family in sync.
+              
+              <View style={{ backgroundColor: '#FFD93D', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 6, marginTop: 8 }}>
+                <Text style={{ color: '#000000', fontWeight: '700', fontSize: 14 }}>Spona</Text>
+              </View>
+              
+              <Text style={{ fontSize: 32, fontWeight: 'bold', color: '#FFFFFF', marginTop: 24, textAlign: 'center', lineHeight: 40 }}>
+                Let's get you{'\n'}signed in!
               </Text>
             </View>
 
-            <View className="gap-4">
-              <View>
-                <Text className="text-sm font-semibold text-slate-700 mb-2">Email</Text>
-                <View className="flex-row items-center bg-white rounded-3xl px-4 py-4 shadow-sm">
-                  <Mail size={20} color="#64748B" />
-                  <TextInput
-                    className="flex-1 ml-3 text-base text-slate-900"
-                    placeholder="your@email.com"
-                    placeholderTextColor="#94A3B8"
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    autoComplete="email"
-                    value={email}
-                    onChangeText={setEmail}
-                    editable={!isLoading}
-                  />
-                </View>
+            {/* Forma */}
+            <View style={{ marginTop: 20 }}>
+              <Text style={{ color: '#9CA3AF', fontSize: 13, marginBottom: 16, marginLeft: 4 }}>
+                You don't have an account yet?{' '}
+                <Text 
+                  style={{ color: '#FFFFFF', fontWeight: '600' }}
+                  onPress={() => navigation.navigate('Register')}
+                >
+                  Sign Up
+                </Text>
+              </Text>
+
+              <View style={{ 
+                flexDirection: 'row', 
+                alignItems: 'center', 
+                backgroundColor: '#1A1A1A', 
+                borderRadius: 16, 
+                paddingHorizontal: 16, 
+                paddingVertical: 16,
+                marginBottom: 12,
+                borderWidth: 1,
+                borderColor: '#2A2A2A'
+              }}>
+                <Mail size={20} color="#6B7280" />
+                <TextInput
+                  style={{ flex: 1, marginLeft: 12, fontSize: 16, color: '#FFFFFF' }}
+                  placeholder="Email"
+                  placeholderTextColor="#6B7280"
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  autoComplete="email"
+                  value={email}
+                  onChangeText={setEmail}
+                  editable={!isLoading}
+                />
               </View>
 
-              <View>
-                <Text className="text-sm font-semibold text-slate-700 mb-2">Password</Text>
-                <View className="flex-row items-center bg-white rounded-3xl px-4 py-4 shadow-sm">
-                  <Lock size={20} color="#64748B" />
-                  <TextInput
-                    className="flex-1 ml-3 text-base text-slate-900"
-                    placeholder="••••••••"
-                    placeholderTextColor="#94A3B8"
-                    secureTextEntry
-                    autoComplete="password"
-                    value={password}
-                    onChangeText={setPassword}
-                    editable={!isLoading}
-                  />
-                </View>
+              <View style={{ 
+                flexDirection: 'row', 
+                alignItems: 'center', 
+                backgroundColor: '#1A1A1A', 
+                borderRadius: 16, 
+                paddingHorizontal: 16, 
+                paddingVertical: 16,
+                marginBottom: 12,
+                borderWidth: 1,
+                borderColor: '#2A2A2A'
+              }}>
+                <Lock size={20} color="#6B7280" />
+                <TextInput
+                  style={{ flex: 1, marginLeft: 12, fontSize: 16, color: '#FFFFFF' }}
+                  placeholder="Password"
+                  placeholderTextColor="#6B7280"
+                  secureTextEntry
+                  autoComplete="password"
+                  value={password}
+                  onChangeText={setPassword}
+                  editable={!isLoading}
+                />
               </View>
+
+              <TouchableOpacity style={{ alignSelf: 'flex-start', marginBottom: 24, marginLeft: 4 }}>
+                <Text style={{ color: '#9CA3AF', fontSize: 13 }}>Forgot password?</Text>
+              </TouchableOpacity>
 
               <TouchableOpacity
-                className="mt-6 rounded-3xl overflow-hidden shadow-lg"
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: 16,
+                  paddingVertical: 18,
+                  alignItems: 'center',
+                  shadowColor: '#FFFFFF',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 12,
+                  elevation: 8,
+                }}
                 onPress={handleLogin}
                 disabled={isLoading}
                 activeOpacity={0.85}
               >
-                <LinearGradient
-                  colors={['#6366F1', '#8B5CF6']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  className="flex-row items-center justify-center py-4"
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minHeight: 56,
-                  }}
-                >
-                  {isLoading ? (
-                    <ActivityIndicator color="#FFFFFF" />
-                  ) : (
-                    <>
-                      <LogIn size={20} color="#FFFFFF" />
-                      <Text className="text-white font-semibold text-base ml-2">Sign in</Text>
-                    </>
-                  )}
-                </LinearGradient>
+                {isLoading ? (
+                  <ActivityIndicator color="#000000" />
+                ) : (
+                  <Text style={{ color: '#000000', fontWeight: '700', fontSize: 16 }}>Sign In</Text>
+                )}
               </TouchableOpacity>
-
-              <View className="flex-row justify-center mt-4">
-                <Text className="text-slate-600">New here? </Text>
-                <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-                  <Text className="text-indigo-600 font-semibold">Create account</Text>
-                </TouchableOpacity>
-              </View>
             </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </LinearGradient>
+    </View>
   );
 }

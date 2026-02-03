@@ -8,11 +8,44 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { Bell, CheckCircle2 } from 'lucide-react-native';
+import { Bell, CheckCircle2, Plus, Users, AlertCircle } from 'lucide-react-native';
 import { useAuthStore } from '@/store';
 import { createReminder, fetchReminders, toggleReminderStatus } from '@/services/reminders';
 import { hapticError, hapticImpactLight, hapticSuccess } from '@/utils/haptics';
 import type { Reminder } from '@/types';
+
+// Member avatar emojis
+const MEMBER_EMOJIS = ['👨', '👩', '👧', '👦', '👴', '👵', '🧑'];
+
+// Pastel accent circles decoration
+const AccentCircles = () => (
+  <>
+    <View
+      style={{
+        position: 'absolute',
+        top: -50,
+        right: -50,
+        width: 180,
+        height: 180,
+        borderRadius: 90,
+        backgroundColor: '#F472B6',
+        opacity: 0.12,
+      }}
+    />
+    <View
+      style={{
+        position: 'absolute',
+        top: 120,
+        left: -60,
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        backgroundColor: '#818CF8',
+        opacity: 0.1,
+      }}
+    />
+  </>
+);
 
 export function RemindersScreen() {
   const { family, profile, familyMembers } = useAuthStore();
@@ -82,96 +115,233 @@ export function RemindersScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-slate-50">
-      <View className="px-6 pt-8 pb-6">
-        <Text className="text-3xl font-bold text-slate-900">Reminders</Text>
-        <Text className="text-base text-slate-600 mt-1">Delegate tasks with smart reminders.</Text>
-      </View>
-
-      <View className="px-6">
-        <View className="bg-white rounded-3xl p-5 shadow-sm">
-          <Text className="text-lg font-semibold text-slate-900">Create reminder</Text>
-          <TextInput
-            className="mt-3 bg-slate-50 rounded-2xl px-4 py-3 text-base text-slate-900"
-            placeholder="Reminder title"
-            placeholderTextColor="#94A3B8"
-            value={title}
-            onChangeText={setTitle}
-          />
-          <TextInput
-            className="mt-3 bg-slate-50 rounded-2xl px-4 py-3 text-base text-slate-900"
-            placeholder="Notes (optional)"
-            placeholderTextColor="#94A3B8"
-            value={note}
-            onChangeText={setNote}
-          />
-          <View className="mt-3 flex-row flex-wrap gap-2">
-            {familyMembers.map((member) => (
-              <TouchableOpacity
-                key={member.id}
-                className={`rounded-2xl px-3 py-2 ${assignee === member.id ? 'bg-purple-600' : 'bg-slate-100'}`}
-                onPress={() => setAssignee(member.id)}
-              >
-                <Text className={assignee === member.id ? 'text-white' : 'text-slate-700'}>
-                  {member.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
-            {familyMembers.length === 0 && (
-              <Text className="text-sm text-slate-500">No members yet.</Text>
-            )}
+    <View style={{ flex: 1, backgroundColor: '#181A20' }}>
+      <AccentCircles />
+      
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 20 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+            <View
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                backgroundColor: '#F472B6',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: 12,
+              }}
+            >
+              <Bell size={24} color="#FFFFFF" />
+            </View>
+            <View>
+              <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#FFFFFF' }}>Reminders</Text>
+              <Text style={{ fontSize: 14, color: '#A1A1AA', marginTop: 2 }}>
+                Delegate tasks smartly 🔔
+              </Text>
+            </View>
           </View>
-          <TouchableOpacity
-            className="mt-4 rounded-2xl bg-purple-600 py-3 items-center"
-            onPress={handleCreate}
-            disabled={isLoading}
+        </View>
+
+        {/* Create Reminder Card */}
+        <View style={{ paddingHorizontal: 24 }}>
+          <View
+            style={{
+              backgroundColor: '#23262F',
+              borderRadius: 24,
+              padding: 20,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 8,
+            }}
           >
-            {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text className="text-white font-semibold">Add reminder</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <View className="px-6 mt-6 pb-10">
-        <View className="bg-white rounded-3xl p-5 shadow-sm">
-          <Text className="text-lg font-semibold text-slate-900">Assigned reminders</Text>
-          <View className="mt-4 gap-3">
-            {reminders.map((reminder) => (
-              <TouchableOpacity
-                key={reminder.id}
-                className="bg-slate-50 rounded-2xl px-4 py-3"
-                onPress={() => handleToggle(reminder)}
-              >
-                <View className="flex-row items-center justify-between">
-                  <View>
-                    <Text className="text-slate-900 font-medium">{reminder.title}</Text>
-                    <Text className="text-xs text-slate-500 mt-1">
-                      {reminder.status === 'pending' ? 'Pending' : 'Done'}{' '}
-                      {reminder.assigned_to
-                        ? `· ${assigneeById.get(reminder.assigned_to) ?? 'Assigned'}`
-                        : ''}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+              <Plus size={20} color="#F472B6" />
+              <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFFFFF', marginLeft: 8 }}>
+                Create Reminder
+              </Text>
+            </View>
+            
+            <TextInput
+              style={{
+                backgroundColor: '#181A20',
+                borderRadius: 16,
+                paddingHorizontal: 16,
+                paddingVertical: 14,
+                fontSize: 16,
+                color: '#FFFFFF',
+                borderWidth: 1,
+                borderColor: '#3F3F46',
+              }}
+              placeholder="Reminder title"
+              placeholderTextColor="#71717A"
+              value={title}
+              onChangeText={setTitle}
+            />
+            
+            <TextInput
+              style={{
+                backgroundColor: '#181A20',
+                borderRadius: 16,
+                paddingHorizontal: 16,
+                paddingVertical: 14,
+                fontSize: 16,
+                color: '#FFFFFF',
+                borderWidth: 1,
+                borderColor: '#3F3F46',
+                marginTop: 12,
+              }}
+              placeholder="Notes (optional)"
+              placeholderTextColor="#71717A"
+              value={note}
+              onChangeText={setNote}
+            />
+            
+            {/* Assignee Selection */}
+            <View style={{ marginTop: 16 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                <Users size={16} color="#A1A1AA" />
+                <Text style={{ fontSize: 14, color: '#A1A1AA', marginLeft: 6 }}>Assign to:</Text>
+              </View>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {familyMembers.map((member, index) => (
+                  <TouchableOpacity
+                    key={member.id}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingHorizontal: 14,
+                      paddingVertical: 10,
+                      borderRadius: 20,
+                      backgroundColor: assignee === member.id ? '#F472B6' : '#181A20',
+                      borderWidth: 1,
+                      borderColor: assignee === member.id ? '#F472B6' : '#3F3F46',
+                    }}
+                    onPress={() => setAssignee(member.id)}
+                  >
+                    <Text style={{ marginRight: 6 }}>{MEMBER_EMOJIS[index % MEMBER_EMOJIS.length]}</Text>
+                    <Text style={{ color: assignee === member.id ? '#FFFFFF' : '#A1A1AA', fontWeight: '500' }}>
+                      {member.name}
                     </Text>
-                  </View>
-                  <View className="flex-row items-center">
-                    <Bell size={18} color="#7C3AED" />
-                    <CheckCircle2
-                      size={18}
-                      color={reminder.status === 'done' ? '#16A34A' : '#94A3B8'}
-                      style={{ marginLeft: 8 }}
-                    />
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-            {reminders.length === 0 && (
-              <Text className="text-sm text-slate-500">No reminders yet.</Text>
+                  </TouchableOpacity>
+                ))}
+                {familyMembers.length === 0 && (
+                  <Text style={{ fontSize: 14, color: '#71717A' }}>No members yet</Text>
+                )}
+              </View>
+            </View>
+            
+            <TouchableOpacity
+              style={{
+                marginTop: 20,
+                borderRadius: 16,
+                backgroundColor: '#F472B6',
+                paddingVertical: 14,
+                alignItems: 'center',
+                shadowColor: '#F472B6',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 4,
+              }}
+              onPress={handleCreate}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>Add Reminder</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Reminders List */}
+        <View style={{ paddingHorizontal: 24, marginTop: 20, paddingBottom: 40 }}>
+          <View
+            style={{
+              backgroundColor: '#23262F',
+              borderRadius: 24,
+              padding: 20,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 8,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+              <AlertCircle size={20} color="#818CF8" />
+              <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFFFFF', marginLeft: 8 }}>
+                Assigned Reminders
+              </Text>
+            </View>
+            
+            {reminders.length === 0 ? (
+              <View style={{ alignItems: 'center', paddingVertical: 24 }}>
+                <Text style={{ fontSize: 40, marginBottom: 12 }}>🔔</Text>
+                <Text style={{ fontSize: 14, color: '#71717A' }}>No reminders yet</Text>
+              </View>
+            ) : (
+              <View style={{ gap: 12 }}>
+                {reminders.map((reminder) => {
+                  const isDone = reminder.status === 'done';
+                  return (
+                    <TouchableOpacity
+                      key={reminder.id}
+                      style={{
+                        backgroundColor: isDone ? '#22C55E15' : '#F472B615',
+                        borderRadius: 16,
+                        padding: 16,
+                        borderLeftWidth: 4,
+                        borderLeftColor: isDone ? '#22C55E' : '#F472B6',
+                      }}
+                      onPress={() => handleToggle(reminder)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <View style={{ flex: 1 }}>
+                          <Text
+                            style={{
+                              fontSize: 16,
+                              fontWeight: '600',
+                              color: isDone ? '#71717A' : '#FFFFFF',
+                              textDecorationLine: isDone ? 'line-through' : 'none',
+                            }}
+                          >
+                            {reminder.title}
+                          </Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+                            <Text style={{ fontSize: 12, color: isDone ? '#52525B' : '#A1A1AA' }}>
+                              {isDone ? '✓ Done' : '○ Pending'}
+                            </Text>
+                            {reminder.assigned_to && (
+                              <Text style={{ fontSize: 12, color: '#71717A', marginLeft: 8 }}>
+                                · {assigneeById.get(reminder.assigned_to) ?? 'Assigned'}
+                              </Text>
+                            )}
+                          </View>
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Bell size={18} color={isDone ? '#52525B' : '#F472B6'} />
+                          <CheckCircle2
+                            size={20}
+                            color={isDone ? '#22C55E' : '#52525B'}
+                            style={{ marginLeft: 8 }}
+                          />
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             )}
           </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }

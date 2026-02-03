@@ -10,14 +10,34 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Mail, Lock, UserPlus } from 'lucide-react-native';
+import { Mail, Lock, User } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '@/services/supabase';
 import { useAuthStore } from '@/store';
 import type { AuthStackParamList } from '@/navigation/AuthNavigator';
+
+// Avatar komponenta za 3D stil
+const Avatar = ({ emoji, size = 60, color = '#FFD93D' }: { emoji: string; size?: number; color?: string }) => (
+  <View
+    style={{
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      backgroundColor: color,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: color,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.4,
+      shadowRadius: 8,
+      elevation: 8,
+    }}
+  >
+    <Text style={{ fontSize: size * 0.5 }}>{emoji}</Text>
+  </View>
+);
 
 const createProfile = async (userId: string, name: string, email: string) => {
   const payload = {
@@ -116,7 +136,7 @@ export function RegisterScreen() {
   };
 
   return (
-    <LinearGradient colors={['#EEF2FF', '#FCE7F3', '#E0F2FE']} style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: '#0F0F0F' }}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
@@ -126,107 +146,142 @@ export function RegisterScreen() {
           keyboardShouldPersistTaps="handled"
           contentInsetAdjustmentBehavior="never"
         >
-          <View className="flex-1 justify-center px-6 py-10">
-            <View className="items-center mb-10">
-              <View className="bg-white/90 rounded-full p-6 shadow-md">
-                <Text className="text-5xl">✨</Text>
+          {/* Dekorativni krugovi */}
+          <View style={{ position: 'absolute', top: 80, right: -20, width: 70, height: 70, borderRadius: 35, backgroundColor: '#F5C4DE', opacity: 0.5 }} />
+          <View style={{ position: 'absolute', top: 150, left: 20, width: 30, height: 30, borderRadius: 15, backgroundColor: '#C4F5A9', opacity: 0.5 }} />
+          <View style={{ position: 'absolute', bottom: 150, right: 40, width: 50, height: 50, borderRadius: 25, backgroundColor: '#C4DEF5', opacity: 0.4 }} />
+
+          <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 40 }}>
+            {/* Avatari */}
+            <View style={{ alignItems: 'center', marginBottom: 32 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 20, height: 100 }}>
+                <View style={{ position: 'absolute', left: 80, top: 10 }}>
+                  <Avatar emoji="✨" size={45} color="#F5D0E9" />
+                </View>
+                <Avatar emoji="👋" size={80} color="#C4F5A9" />
+                <View style={{ position: 'absolute', right: 80, top: 10 }}>
+                  <Avatar emoji="🎉" size={45} color="#C4DEF5" />
+                </View>
               </View>
-              <Text className="text-3xl font-bold text-slate-900 mt-6">Create account</Text>
-              <Text className="text-base text-slate-600 mt-2 text-center">
-                Start your family mission with FamilySync.
+              
+              <View style={{ backgroundColor: '#C4F5A9', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 6, marginTop: 8 }}>
+                <Text style={{ color: '#000000', fontWeight: '700', fontSize: 14 }}>Spona</Text>
+              </View>
+              
+              <Text style={{ fontSize: 32, fontWeight: 'bold', color: '#FFFFFF', marginTop: 24, textAlign: 'center', lineHeight: 40 }}>
+                Join your{'\n'}family today!
               </Text>
             </View>
 
-            <View className="gap-4">
-              <View>
-                <Text className="text-sm font-semibold text-slate-700 mb-2">Name</Text>
-                <View className="flex-row items-center bg-white rounded-3xl px-4 py-4 shadow-sm">
-                  <UserPlus size={20} color="#64748B" />
-                  <TextInput
-                    className="flex-1 ml-3 text-base text-slate-900"
-                    placeholder="Your name"
-                    placeholderTextColor="#94A3B8"
-                    value={name}
-                    onChangeText={setName}
-                    editable={!isLoading}
-                  />
-                </View>
+            {/* Forma */}
+            <View style={{ marginTop: 10 }}>
+              <Text style={{ color: '#9CA3AF', fontSize: 13, marginBottom: 16, marginLeft: 4 }}>
+                Already have an account?{' '}
+                <Text 
+                  style={{ color: '#FFFFFF', fontWeight: '600' }}
+                  onPress={() => navigation.navigate('Login')}
+                >
+                  Sign In
+                </Text>
+              </Text>
+
+              <View style={{ 
+                flexDirection: 'row', 
+                alignItems: 'center', 
+                backgroundColor: '#1A1A1A', 
+                borderRadius: 16, 
+                paddingHorizontal: 16, 
+                paddingVertical: 16,
+                marginBottom: 12,
+                borderWidth: 1,
+                borderColor: '#2A2A2A'
+              }}>
+                <User size={20} color="#6B7280" />
+                <TextInput
+                  style={{ flex: 1, marginLeft: 12, fontSize: 16, color: '#FFFFFF' }}
+                  placeholder="Your name"
+                  placeholderTextColor="#6B7280"
+                  value={name}
+                  onChangeText={setName}
+                  editable={!isLoading}
+                />
               </View>
 
-              <View>
-                <Text className="text-sm font-semibold text-slate-700 mb-2">Email</Text>
-                <View className="flex-row items-center bg-white rounded-3xl px-4 py-4 shadow-sm">
-                  <Mail size={20} color="#64748B" />
-                  <TextInput
-                    className="flex-1 ml-3 text-base text-slate-900"
-                    placeholder="your@email.com"
-                    placeholderTextColor="#94A3B8"
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    autoComplete="email"
-                    value={email}
-                    onChangeText={setEmail}
-                    editable={!isLoading}
-                  />
-                </View>
+              <View style={{ 
+                flexDirection: 'row', 
+                alignItems: 'center', 
+                backgroundColor: '#1A1A1A', 
+                borderRadius: 16, 
+                paddingHorizontal: 16, 
+                paddingVertical: 16,
+                marginBottom: 12,
+                borderWidth: 1,
+                borderColor: '#2A2A2A'
+              }}>
+                <Mail size={20} color="#6B7280" />
+                <TextInput
+                  style={{ flex: 1, marginLeft: 12, fontSize: 16, color: '#FFFFFF' }}
+                  placeholder="Email"
+                  placeholderTextColor="#6B7280"
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  autoComplete="email"
+                  value={email}
+                  onChangeText={setEmail}
+                  editable={!isLoading}
+                />
               </View>
 
-              <View>
-                <Text className="text-sm font-semibold text-slate-700 mb-2">Password</Text>
-                <View className="flex-row items-center bg-white rounded-3xl px-4 py-4 shadow-sm">
-                  <Lock size={20} color="#64748B" />
-                  <TextInput
-                    className="flex-1 ml-3 text-base text-slate-900"
-                    placeholder="••••••••"
-                    placeholderTextColor="#94A3B8"
-                    secureTextEntry
-                    autoComplete="password"
-                    value={password}
-                    onChangeText={setPassword}
-                    editable={!isLoading}
-                  />
-                </View>
+              <View style={{ 
+                flexDirection: 'row', 
+                alignItems: 'center', 
+                backgroundColor: '#1A1A1A', 
+                borderRadius: 16, 
+                paddingHorizontal: 16, 
+                paddingVertical: 16,
+                marginBottom: 24,
+                borderWidth: 1,
+                borderColor: '#2A2A2A'
+              }}>
+                <Lock size={20} color="#6B7280" />
+                <TextInput
+                  style={{ flex: 1, marginLeft: 12, fontSize: 16, color: '#FFFFFF' }}
+                  placeholder="Password"
+                  placeholderTextColor="#6B7280"
+                  secureTextEntry
+                  autoComplete="password"
+                  value={password}
+                  onChangeText={setPassword}
+                  editable={!isLoading}
+                />
               </View>
 
               <TouchableOpacity
-                className="mt-6 rounded-3xl overflow-hidden shadow-lg"
+                style={{
+                  backgroundColor: '#C4F5A9',
+                  borderRadius: 16,
+                  paddingVertical: 18,
+                  alignItems: 'center',
+                  shadowColor: '#C4F5A9',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 12,
+                  elevation: 8,
+                }}
                 onPress={handleRegister}
                 disabled={isLoading}
                 activeOpacity={0.85}
               >
-                <LinearGradient
-                  colors={['#F97316', '#EC4899']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  className="flex-row items-center justify-center py-4"
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minHeight: 56,
-                  }}
-                >
-                  {isLoading ? (
-                    <ActivityIndicator color="#FFFFFF" />
-                  ) : (
-                    <>
-                      <UserPlus size={20} color="#FFFFFF" />
-                      <Text className="text-white font-semibold text-base ml-2">Create account</Text>
-                    </>
-                  )}
-                </LinearGradient>
+                {isLoading ? (
+                  <ActivityIndicator color="#000000" />
+                ) : (
+                  <Text style={{ color: '#000000', fontWeight: '700', fontSize: 16 }}>Create Account</Text>
+                )}
               </TouchableOpacity>
-
-              <View className="flex-row justify-center mt-4">
-                <Text className="text-slate-600">Already have an account? </Text>
-                <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                  <Text className="text-indigo-600 font-semibold">Sign in</Text>
-                </TouchableOpacity>
-              </View>
             </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </LinearGradient>
+    </View>
   );
 }
