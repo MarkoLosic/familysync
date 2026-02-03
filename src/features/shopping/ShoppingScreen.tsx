@@ -14,9 +14,11 @@ import { createShoppingItem, fetchShoppingItems, toggleShoppingItem } from '@/se
 import type { ShoppingItem } from '@/types';
 import { supabase } from '@/services/supabase';
 import { hapticError, hapticImpactLight, hapticSuccess } from '@/utils/haptics';
+import { useTheme } from '@/theme';
 
 export function ShoppingScreen() {
   const { family, profile } = useAuthStore();
+  const { theme } = useTheme();
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [title, setTitle] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -94,46 +96,46 @@ export function ShoppingScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#0F0F0F' }}>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Dekorativni krugovi */}
-        <View style={{ position: 'absolute', top: 50, right: -20, width: 60, height: 60, borderRadius: 30, backgroundColor: '#FEF3C7', opacity: 0.4 }} />
-        <View style={{ position: 'absolute', top: 120, left: 20, width: 30, height: 30, borderRadius: 15, backgroundColor: '#C4F5A9', opacity: 0.4 }} />
+        <View style={{ position: 'absolute', top: 50, right: -20, width: 60, height: 60, borderRadius: 30, backgroundColor: theme.colors.orangeLight, opacity: 0.4 }} />
+        <View style={{ position: 'absolute', top: 120, left: 20, width: 30, height: 30, borderRadius: 15, backgroundColor: theme.colors.greenLight, opacity: 0.4 }} />
 
         <View style={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 20 }}>
-          <Text style={{ color: '#FFFFFF', fontSize: 28, fontWeight: '700' }}>Shopping 🛒</Text>
-          <Text style={{ color: '#6B7280', fontSize: 16, marginTop: 8 }}>Keep the pantry stocked together.</Text>
+          <Text style={{ color: theme.colors.text, fontSize: 28, fontWeight: '700' }}>Shopping 🛒</Text>
+          <Text style={{ color: theme.colors.textSecondary, fontSize: 16, marginTop: 8 }}>Keep the pantry stocked together.</Text>
         </View>
 
         <View style={{ paddingHorizontal: 24 }}>
           <View style={{ 
-            backgroundColor: '#1A1A1A', 
+            backgroundColor: theme.colors.card, 
             borderRadius: 24, 
             padding: 20,
             borderWidth: 1,
-            borderColor: '#2A2A2A'
+            borderColor: theme.colors.border
           }}>
-            <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600' }}>Add item</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600' }}>Add item</Text>
             <View style={{ 
-              backgroundColor: '#0F0F0F', 
+              backgroundColor: theme.colors.inputBg, 
               borderRadius: 16, 
               paddingHorizontal: 16, 
               paddingVertical: 14,
               marginTop: 16,
               borderWidth: 1,
-              borderColor: '#2A2A2A'
+              borderColor: theme.colors.border
             }}>
               <TextInput
-                style={{ fontSize: 16, color: '#FFFFFF' }}
+                style={{ fontSize: 16, color: theme.colors.text }}
                 placeholder="Milk, bread, apples..."
-                placeholderTextColor="#6B7280"
+                placeholderTextColor={theme.colors.textSecondary}
                 value={title}
                 onChangeText={setTitle}
               />
             </View>
             <TouchableOpacity
               style={{
-                backgroundColor: '#7C3AED',
+                backgroundColor: theme.colors.primary,
                 borderRadius: 16,
                 paddingVertical: 16,
                 alignItems: 'center',
@@ -143,9 +145,9 @@ export function ShoppingScreen() {
               disabled={isLoading}
             >
               {isLoading ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator color={theme.colors.card} />
               ) : (
-                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>Add to list</Text>
+                <Text style={{ color: theme.colors.card, fontWeight: '600', fontSize: 16 }}>Add to list</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -153,13 +155,13 @@ export function ShoppingScreen() {
 
         <View style={{ paddingHorizontal: 24, marginTop: 24 }}>
           <View style={{ 
-            backgroundColor: '#1A1A1A', 
+            backgroundColor: theme.colors.card, 
             borderRadius: 24, 
             padding: 20,
             borderWidth: 1,
-            borderColor: '#2A2A2A'
+            borderColor: theme.colors.border
           }}>
-            <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600' }}>Your list</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600' }}>Your list</Text>
             <View style={{ marginTop: 16, gap: 12 }}>
               {items.map((item) => {
                 const checked = item.is_checked ?? false;
@@ -167,7 +169,7 @@ export function ShoppingScreen() {
                   <TouchableOpacity
                     key={item.id}
                     style={{
-                      backgroundColor: checked ? '#064E3B' : '#0F0F0F',
+                      backgroundColor: checked ? theme.colors.success + '20' : theme.colors.cardSecondary,
                       borderRadius: 16,
                       paddingHorizontal: 16,
                       paddingVertical: 14,
@@ -175,24 +177,24 @@ export function ShoppingScreen() {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       borderWidth: 1,
-                      borderColor: checked ? '#10B981' : '#2A2A2A',
+                      borderColor: checked ? theme.colors.success : theme.colors.border,
                     }}
                     onPress={() => handleToggle(item)}
                   >
                     <Text style={{ 
-                      color: checked ? '#10B981' : '#FFFFFF', 
+                      color: checked ? theme.colors.success : theme.colors.text, 
                       fontWeight: '500', 
                       fontSize: 16,
                       textDecorationLine: checked ? 'line-through' : 'none'
                     }}>
                       {item.title || item.name}
                     </Text>
-                    <ShoppingCart size={18} color={checked ? '#10B981' : '#6B7280'} />
+                    <ShoppingCart size={18} color={checked ? theme.colors.success : theme.colors.textSecondary} />
                   </TouchableOpacity>
                 );
               })}
               {items.length === 0 && (
-                <Text style={{ color: '#6B7280', fontSize: 14 }}>No items yet.</Text>
+                <Text style={{ color: theme.colors.textSecondary, fontSize: 14 }}>No items yet.</Text>
               )}
             </View>
           </View>

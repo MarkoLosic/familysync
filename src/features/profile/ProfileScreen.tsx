@@ -13,9 +13,11 @@ import * as Clipboard from 'expo-clipboard';
 import { useAuthStore } from '@/store';
 import { supabase } from '@/services/supabase';
 import { getProfilePoints } from '@/utils/profile';
+import { useTheme } from '@/theme';
 
 export function ProfileScreen() {
   const { profile, family, familyMembers, signOut } = useAuthStore();
+  const { theme, themeName, toggleTheme } = useTheme();
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [username, setUsername] = useState(profile?.username ?? profile?.name ?? '');
@@ -100,68 +102,68 @@ export function ProfileScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#0F0F0F' }}>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Dekorativni krugovi */}
-        <View style={{ position: 'absolute', top: 50, right: 30, width: 50, height: 50, borderRadius: 25, backgroundColor: '#C4F5A9', opacity: 0.4 }} />
-        <View style={{ position: 'absolute', top: 120, left: -15, width: 40, height: 40, borderRadius: 20, backgroundColor: '#F5C4DE', opacity: 0.4 }} />
+        <View style={{ position: 'absolute', top: 50, right: 30, width: 50, height: 50, borderRadius: 25, backgroundColor: theme.colors.greenLight, opacity: 0.4 }} />
+        <View style={{ position: 'absolute', top: 120, left: -15, width: 40, height: 40, borderRadius: 20, backgroundColor: theme.colors.pinkLight, opacity: 0.4 }} />
 
         <View style={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 20 }}>
-          <Text style={{ color: '#FFFFFF', fontSize: 28, fontWeight: '700' }}>Profile 👤</Text>
-          <Text style={{ color: '#6B7280', fontSize: 16, marginTop: 8 }}>Manage your family details.</Text>
+          <Text style={{ color: theme.colors.text, fontSize: 28, fontWeight: '700' }}>Profile 👤</Text>
+          <Text style={{ color: theme.colors.textSecondary, fontSize: 16, marginTop: 8 }}>Manage your family details.</Text>
         </View>
 
         {/* User Info Card */}
         <View style={{ paddingHorizontal: 24 }}>
           <View style={{ 
-            backgroundColor: '#1A1A1A', 
+            backgroundColor: theme.colors.card, 
             borderRadius: 24, 
             padding: 20,
             borderWidth: 1,
-            borderColor: '#2A2A2A',
+            borderColor: theme.colors.border,
             alignItems: 'center'
           }}>
             <View style={{
               width: 80,
               height: 80,
               borderRadius: 40,
-              backgroundColor: '#7C3AED',
+              backgroundColor: theme.colors.primary,
               alignItems: 'center',
               justifyContent: 'center',
               marginBottom: 16
             }}>
               <Text style={{ fontSize: 36 }}>👤</Text>
             </View>
-            <Text style={{ color: '#FFFFFF', fontSize: 22, fontWeight: '700' }}>{profile?.name ?? 'User'}</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 22, fontWeight: '700' }}>{profile?.name ?? 'User'}</Text>
             <View style={{ 
-              backgroundColor: '#7C3AED', 
+              backgroundColor: theme.colors.primary, 
               borderRadius: 12, 
               paddingHorizontal: 12, 
               paddingVertical: 4,
               marginTop: 8
             }}>
-              <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '600' }}>{profile?.role ?? 'Member'}</Text>
+              <Text style={{ color: theme.colors.card, fontSize: 12, fontWeight: '600' }}>{profile?.role ?? 'Member'}</Text>
             </View>
-            <Text style={{ color: '#FFFFFF', fontSize: 36, fontWeight: '800', marginTop: 16 }}>{getProfilePoints(profile)}</Text>
-            <Text style={{ color: '#6B7280', fontSize: 14 }}>Total Points</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 36, fontWeight: '800', marginTop: 16 }}>{getProfilePoints(profile)}</Text>
+            <Text style={{ color: theme.colors.textSecondary, fontSize: 14 }}>Total Points</Text>
           </View>
         </View>
 
         {/* Family Card */}
         <View style={{ paddingHorizontal: 24, marginTop: 20 }}>
           <View style={{ 
-            backgroundColor: '#1A1A1A', 
+            backgroundColor: theme.colors.card, 
             borderRadius: 24, 
             padding: 20,
             borderWidth: 1,
-            borderColor: '#2A2A2A'
+            borderColor: theme.colors.border
           }}>
-            <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600' }}>Family</Text>
-            <Text style={{ color: '#9CA3AF', fontSize: 16, marginTop: 8 }}>{family?.name ?? 'No family yet'}</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600' }}>Family</Text>
+            <Text style={{ color: theme.colors.textSecondary, fontSize: 16, marginTop: 8 }}>{family?.name ?? 'No family yet'}</Text>
             
-            <Text style={{ color: '#6B7280', fontSize: 13, marginTop: 16 }}>Invite code</Text>
+            <Text style={{ color: theme.colors.textMuted, fontSize: 13, marginTop: 16 }}>Invite code</Text>
             <View style={{ 
-              backgroundColor: '#0F0F0F', 
+              backgroundColor: theme.colors.inputBg, 
               borderRadius: 16, 
               paddingHorizontal: 16, 
               paddingVertical: 14,
@@ -170,13 +172,13 @@ export function ProfileScreen() {
               alignItems: 'center',
               justifyContent: 'space-between',
               borderWidth: 1,
-              borderColor: '#2A2A2A'
+              borderColor: theme.colors.border
             }}>
-              <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>
+              <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 16 }}>
                 {isLoading ? 'Loading...' : inviteCode ?? 'Not available'}
               </Text>
               <TouchableOpacity onPress={handleCopy} disabled={!inviteCode}>
-                <Copy size={20} color={inviteCode ? '#7C3AED' : '#4B5563'} />
+                <Copy size={20} color={inviteCode ? theme.colors.primary : theme.colors.textMuted} />
               </TouchableOpacity>
             </View>
           </View>
@@ -185,34 +187,34 @@ export function ProfileScreen() {
         {/* Settings Card */}
         <View style={{ paddingHorizontal: 24, marginTop: 20 }}>
           <View style={{ 
-            backgroundColor: '#1A1A1A', 
+            backgroundColor: theme.colors.card, 
             borderRadius: 24, 
             padding: 20,
             borderWidth: 1,
-            borderColor: '#2A2A2A'
+            borderColor: theme.colors.border
           }}>
-            <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600' }}>Settings</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600' }}>Settings</Text>
             
             <View style={{ 
-              backgroundColor: '#0F0F0F', 
+              backgroundColor: theme.colors.inputBg, 
               borderRadius: 16, 
               paddingHorizontal: 16, 
               paddingVertical: 14,
               marginTop: 16,
               borderWidth: 1,
-              borderColor: '#2A2A2A'
+              borderColor: theme.colors.border
             }}>
               <TextInput
-                style={{ fontSize: 16, color: '#FFFFFF' }}
+                style={{ fontSize: 16, color: theme.colors.text }}
                 placeholder="Username"
-                placeholderTextColor="#6B7280"
+                placeholderTextColor={theme.colors.textSecondary}
                 value={username}
                 onChangeText={setUsername}
               />
             </View>
             <TouchableOpacity
               style={{
-                backgroundColor: '#7C3AED',
+                backgroundColor: theme.colors.primary,
                 borderRadius: 16,
                 paddingVertical: 16,
                 alignItems: 'center',
@@ -222,25 +224,25 @@ export function ProfileScreen() {
               disabled={isLoading}
             >
               {isLoading ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator color={theme.colors.card} />
               ) : (
-                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>Update username</Text>
+                <Text style={{ color: theme.colors.card, fontWeight: '600', fontSize: 16 }}>Update username</Text>
               )}
             </TouchableOpacity>
 
             <View style={{ 
-              backgroundColor: '#0F0F0F', 
+              backgroundColor: theme.colors.inputBg, 
               borderRadius: 16, 
               paddingHorizontal: 16, 
               paddingVertical: 14,
               marginTop: 16,
               borderWidth: 1,
-              borderColor: '#2A2A2A'
+              borderColor: theme.colors.border
             }}>
               <TextInput
-                style={{ fontSize: 16, color: '#FFFFFF' }}
+                style={{ fontSize: 16, color: theme.colors.text }}
                 placeholder="New password"
-                placeholderTextColor="#6B7280"
+                placeholderTextColor={theme.colors.textSecondary}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -248,7 +250,7 @@ export function ProfileScreen() {
             </View>
             <TouchableOpacity
               style={{
-                backgroundColor: '#374151',
+                backgroundColor: theme.colors.cardSecondary,
                 borderRadius: 16,
                 paddingVertical: 16,
                 alignItems: 'center',
@@ -258,9 +260,9 @@ export function ProfileScreen() {
               disabled={isLoading}
             >
               {isLoading ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator color={theme.colors.text} />
               ) : (
-                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>Change password</Text>
+                <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 16 }}>Change password</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -269,16 +271,16 @@ export function ProfileScreen() {
         {/* Members Card */}
         <View style={{ paddingHorizontal: 24, marginTop: 20 }}>
           <View style={{ 
-            backgroundColor: '#1A1A1A', 
+            backgroundColor: theme.colors.card, 
             borderRadius: 24, 
             padding: 20,
             borderWidth: 1,
-            borderColor: '#2A2A2A'
+            borderColor: theme.colors.border
           }}>
-            <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600' }}>Members</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600' }}>Members</Text>
             <View style={{ marginTop: 16, gap: 12 }}>
               {familyMembers.map((member, index) => {
-                const colors = ['#BBF7D0', '#FBCFE8', '#FEF08A', '#DBEAFE'];
+                const colors = [theme.colors.greenLight, theme.colors.pinkLight, theme.colors.orangeLight, theme.colors.primaryLight];
                 const bgColor = colors[index % colors.length];
                 return (
                   <View 
@@ -296,31 +298,52 @@ export function ProfileScreen() {
                       width: 40,
                       height: 40,
                       borderRadius: 20,
-                      backgroundColor: 'rgba(255,255,255,0.8)',
+                      backgroundColor: theme.colors.card,
                       alignItems: 'center',
                       justifyContent: 'center'
                     }}>
                       <Text style={{ fontSize: 20 }}>👤</Text>
                     </View>
                     <View style={{ marginLeft: 12 }}>
-                      <Text style={{ color: '#1F2937', fontWeight: '600', fontSize: 16 }}>{member.name}</Text>
-                      <Text style={{ color: '#4B5563', fontSize: 12, marginTop: 2 }}>{member.role}</Text>
+                      <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 16 }}>{member.name}</Text>
+                      <Text style={{ color: theme.colors.textSecondary, fontSize: 12, marginTop: 2 }}>{member.role}</Text>
                     </View>
                   </View>
                 );
               })}
               {familyMembers.length === 0 && (
-                <Text style={{ color: '#6B7280', fontSize: 14 }}>No members yet.</Text>
+                <Text style={{ color: theme.colors.textSecondary, fontSize: 14 }}>No members yet.</Text>
               )}
             </View>
           </View>
+        </View>
+
+        {/* Theme Switcher */}
+        <View style={{ paddingHorizontal: 24, marginTop: 20 }}>
+          <TouchableOpacity
+            style={{
+              backgroundColor: theme.colors.card,
+              borderRadius: 16,
+              paddingVertical: 18,
+              alignItems: 'center',
+              flexDirection: 'row',
+              justifyContent: 'center',
+              borderWidth: 1,
+              borderColor: theme.colors.border,
+            }}
+            onPress={toggleTheme}
+          >
+            <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 16 }}>
+              Theme: {themeName === 'light' ? 'Light' : themeName === 'dark' ? 'Dark' : 'Colorful'} 🌈
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Sign Out */}
         <View style={{ paddingHorizontal: 24, marginTop: 20 }}>
           <TouchableOpacity
             style={{
-              backgroundColor: '#DC2626',
+              backgroundColor: theme.colors.error,
               borderRadius: 16,
               paddingVertical: 18,
               alignItems: 'center',
@@ -329,8 +352,8 @@ export function ProfileScreen() {
             }}
             onPress={handleSignOut}
           >
-            <LogOut size={20} color="#FFFFFF" />
-            <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16, marginLeft: 8 }}>Sign out</Text>
+            <LogOut size={20} color={theme.colors.card} />
+            <Text style={{ color: theme.colors.card, fontWeight: '600', fontSize: 16, marginLeft: 8 }}>Sign out</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

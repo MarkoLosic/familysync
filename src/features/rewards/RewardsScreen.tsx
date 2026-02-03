@@ -14,6 +14,7 @@ import { claimReward, createReward, fetchRewards } from '@/services/rewards';
 import { getProfilePoints } from '@/utils/profile';
 import { hapticError, hapticSuccess } from '@/utils/haptics';
 import type { Reward } from '@/types';
+import { useTheme } from '@/theme';
 
 // Reward card colors
 const REWARD_COLORS = [
@@ -25,7 +26,7 @@ const REWARD_COLORS = [
 ];
 
 // Pastel accent circles decoration
-const AccentCircles = () => (
+const AccentCircles = ({ theme }: { theme: any }) => (
   <>
     <View
       style={{
@@ -35,7 +36,7 @@ const AccentCircles = () => (
         width: 180,
         height: 180,
         borderRadius: 90,
-        backgroundColor: '#EC4899',
+        backgroundColor: theme.primary,
         opacity: 0.15,
       }}
     />
@@ -47,7 +48,7 @@ const AccentCircles = () => (
         width: 140,
         height: 140,
         borderRadius: 70,
-        backgroundColor: '#8B5CF6',
+        backgroundColor: theme.primary,
         opacity: 0.1,
       }}
     />
@@ -56,6 +57,7 @@ const AccentCircles = () => (
 
 export function RewardsScreen() {
   const { family, profile } = useAuthStore();
+  const { theme } = useTheme();
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [title, setTitle] = useState('');
   const [cost, setCost] = useState('50');
@@ -121,8 +123,8 @@ export function RewardsScreen() {
   const points = getProfilePoints(profile);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#181A20' }}>
-      <AccentCircles />
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <AccentCircles theme={theme.colors} />
       
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
         {/* Header */}
@@ -134,7 +136,7 @@ export function RewardsScreen() {
                   width: 48,
                   height: 48,
                   borderRadius: 24,
-                  backgroundColor: '#EC4899',
+                  backgroundColor: theme.colors.primary,
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginRight: 12,
@@ -143,8 +145,8 @@ export function RewardsScreen() {
                 <Gift size={24} color="#FFFFFF" />
               </View>
               <View>
-                <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#FFFFFF' }}>Rewards</Text>
-                <Text style={{ fontSize: 14, color: '#A1A1AA', marginTop: 2 }}>
+                <Text style={{ fontSize: 28, fontWeight: 'bold', color: theme.colors.text }}>Rewards</Text>
+                <Text style={{ fontSize: 14, color: theme.colors.textSecondary, marginTop: 2 }}>
                   Earn and redeem 🎁
                 </Text>
               </View>
@@ -155,26 +157,26 @@ export function RewardsScreen() {
           <View
             style={{
               marginTop: 20,
-              backgroundColor: '#23262F',
+              backgroundColor: theme.colors.card,
               borderRadius: 20,
               padding: 20,
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'center',
               borderWidth: 2,
-              borderColor: '#FBBF24',
-              shadowColor: '#FBBF24',
+              borderColor: theme.colors.primary,
+              shadowColor: theme.colors.primary,
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.2,
               shadowRadius: 8,
               elevation: 4,
             }}
           >
-            <Star size={28} color="#FBBF24" fill="#FBBF24" />
-            <Text style={{ fontSize: 32, fontWeight: 'bold', color: '#FBBF24', marginLeft: 12 }}>
+            <Star size={28} color={theme.colors.primary} fill={theme.colors.primary} />
+            <Text style={{ fontSize: 32, fontWeight: 'bold', color: theme.colors.primary, marginLeft: 12 }}>
               {points}
             </Text>
-            <Text style={{ fontSize: 16, color: '#A1A1AA', marginLeft: 8 }}>points</Text>
+            <Text style={{ fontSize: 16, color: theme.colors.textSecondary, marginLeft: 8 }}>points</Text>
           </View>
         </View>
 
@@ -182,82 +184,74 @@ export function RewardsScreen() {
         <View style={{ paddingHorizontal: 24 }}>
           <View
             style={{
-              backgroundColor: '#23262F',
+              backgroundColor: theme.colors.card,
               borderRadius: 24,
               padding: 20,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 8,
+              ...theme.shadows.card,
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-              <Sparkles size={20} color="#EC4899" />
-              <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFFFFF', marginLeft: 8 }}>
+              <Sparkles size={20} color={theme.colors.primary} />
+              <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginLeft: 8 }}>
                 New Reward
               </Text>
             </View>
             
             <TextInput
               style={{
-                backgroundColor: '#181A20',
+                backgroundColor: theme.colors.inputBg,
                 borderRadius: 16,
                 paddingHorizontal: 16,
                 paddingVertical: 14,
                 fontSize: 16,
-                color: '#FFFFFF',
+                color: theme.colors.text,
                 borderWidth: 1,
-                borderColor: '#3F3F46',
+                borderColor: theme.colors.border,
               }}
               placeholder="Reward title (e.g., Ice cream trip)"
-              placeholderTextColor="#71717A"
+              placeholderTextColor={theme.colors.textMuted}
               value={title}
               onChangeText={setTitle}
             />
             
             <View
               style={{
-                backgroundColor: '#181A20',
+                backgroundColor: theme.colors.inputBg,
                 borderRadius: 16,
                 paddingHorizontal: 16,
                 paddingVertical: 14,
                 marginTop: 12,
                 borderWidth: 1,
-                borderColor: '#3F3F46',
+                borderColor: theme.colors.border,
                 flexDirection: 'row',
                 alignItems: 'center',
               }}
             >
-              <Star size={18} color="#FBBF24" />
+              <Star size={18} color={theme.colors.primary} />
               <TextInput
                 style={{
                   flex: 1,
                   fontSize: 16,
-                  color: '#FFFFFF',
+                  color: theme.colors.text,
                   marginLeft: 10,
                 }}
                 placeholder="Points cost"
-                placeholderTextColor="#71717A"
+                placeholderTextColor={theme.colors.textMuted}
                 value={cost}
                 onChangeText={setCost}
                 keyboardType="numeric"
               />
-              <Text style={{ color: '#71717A' }}>pts</Text>
+              <Text style={{ color: theme.colors.textMuted }}>pts</Text>
             </View>
             
             <TouchableOpacity
               style={{
                 marginTop: 16,
                 borderRadius: 16,
-                backgroundColor: '#EC4899',
+                backgroundColor: theme.colors.primary,
                 paddingVertical: 14,
                 alignItems: 'center',
-                shadowColor: '#EC4899',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 8,
-                elevation: 4,
+                ...theme.shadows.card,
               }}
               onPress={handleCreate}
               disabled={isLoading}
@@ -275,19 +269,15 @@ export function RewardsScreen() {
         <View style={{ paddingHorizontal: 24, marginTop: 20, paddingBottom: 40 }}>
           <View
             style={{
-              backgroundColor: '#23262F',
+              backgroundColor: theme.colors.card,
               borderRadius: 24,
               padding: 20,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 8,
+              ...theme.shadows.card,
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-              <ShoppingBag size={20} color="#A78BFA" />
-              <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFFFFF', marginLeft: 8 }}>
+              <ShoppingBag size={20} color={theme.colors.primary} />
+              <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginLeft: 8 }}>
                 Reward Shop
               </Text>
             </View>
@@ -295,7 +285,7 @@ export function RewardsScreen() {
             {rewards.length === 0 ? (
               <View style={{ alignItems: 'center', paddingVertical: 24 }}>
                 <Text style={{ fontSize: 40, marginBottom: 12 }}>🎁</Text>
-                <Text style={{ fontSize: 14, color: '#71717A' }}>No rewards yet. Add your first one!</Text>
+                <Text style={{ fontSize: 14, color: theme.colors.textMuted }}>No rewards yet. Add your first one!</Text>
               </View>
             ) : (
               <View style={{ gap: 12 }}>
@@ -315,19 +305,19 @@ export function RewardsScreen() {
                     >
                       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                         <View style={{ flex: 1 }}>
-                          <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>
+                          <Text style={{ fontSize: 16, fontWeight: '600', color: theme.colors.text }}>
                             {reward.title}
                           </Text>
                           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-                            <Star size={14} color="#FBBF24" fill="#FBBF24" />
-                            <Text style={{ fontSize: 14, fontWeight: '600', color: '#FBBF24', marginLeft: 4 }}>
+                            <Star size={14} color={theme.colors.primary} fill={theme.colors.primary} />
+                            <Text style={{ fontSize: 14, fontWeight: '600', color: theme.colors.primary, marginLeft: 4 }}>
                               {reward.cost} pts
                             </Text>
                           </View>
                         </View>
                         <TouchableOpacity
                           style={{
-                            backgroundColor: canAfford ? colorScheme.accent : '#3F3F46',
+                            backgroundColor: canAfford ? colorScheme.accent : theme.colors.border,
                             paddingHorizontal: 16,
                             paddingVertical: 10,
                             borderRadius: 14,

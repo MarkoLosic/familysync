@@ -13,6 +13,7 @@ import { useAuthStore } from '@/store';
 import { createFridgeNote, deleteFridgeNote, fetchFridgeNotes } from '@/services/fridge';
 import type { FridgeNote } from '@/types';
 import { hapticError, hapticImpactLight, hapticSuccess } from '@/utils/haptics';
+import { useTheme } from '@/theme';
 
 // Note colors for variety
 const NOTE_COLORS = [
@@ -24,7 +25,7 @@ const NOTE_COLORS = [
 ];
 
 // Pastel accent circles decoration
-const AccentCircles = () => (
+const AccentCircles = ({ theme }: { theme: any }) => (
   <>
     <View
       style={{
@@ -34,7 +35,7 @@ const AccentCircles = () => (
         width: 180,
         height: 180,
         borderRadius: 90,
-        backgroundColor: '#FBBF24',
+        backgroundColor: theme.primary,
         opacity: 0.12,
       }}
     />
@@ -46,7 +47,7 @@ const AccentCircles = () => (
         width: 120,
         height: 120,
         borderRadius: 60,
-        backgroundColor: '#F472B6',
+        backgroundColor: theme.primary,
         opacity: 0.1,
       }}
     />
@@ -55,6 +56,7 @@ const AccentCircles = () => (
 
 export function FridgeScreen() {
   const { family, profile } = useAuthStore();
+  const { theme } = useTheme();
   const [notes, setNotes] = useState<FridgeNote[]>([]);
   const [content, setContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -114,8 +116,8 @@ export function FridgeScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#181A20' }}>
-      <AccentCircles />
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <AccentCircles theme={theme.colors} />
       
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
         {/* Header */}
@@ -126,7 +128,7 @@ export function FridgeScreen() {
                 width: 48,
                 height: 48,
                 borderRadius: 24,
-                backgroundColor: '#FBBF24',
+                backgroundColor: theme.colors.primary,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginRight: 12,
@@ -135,8 +137,8 @@ export function FridgeScreen() {
               <StickyNote size={24} color="#FFFFFF" />
             </View>
             <View>
-              <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#FFFFFF' }}>Fridge</Text>
-              <Text style={{ fontSize: 14, color: '#A1A1AA', marginTop: 2 }}>
+              <Text style={{ fontSize: 28, fontWeight: 'bold', color: theme.colors.text }}>Fridge</Text>
+              <Text style={{ fontSize: 14, color: theme.colors.textSecondary, marginTop: 2 }}>
                 Quick notes for the family 📝
               </Text>
             </View>
@@ -147,37 +149,33 @@ export function FridgeScreen() {
         <View style={{ paddingHorizontal: 24 }}>
           <View
             style={{
-              backgroundColor: '#23262F',
+              backgroundColor: theme.colors.card,
               borderRadius: 24,
               padding: 20,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 8,
+              ...theme.shadows.card,
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-              <Plus size={20} color="#FBBF24" />
-              <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFFFFF', marginLeft: 8 }}>
+              <Plus size={20} color={theme.colors.primary} />
+              <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginLeft: 8 }}>
                 Pin a Note
               </Text>
             </View>
             <TextInput
               style={{
-                backgroundColor: '#181A20',
+                backgroundColor: theme.colors.inputBg,
                 borderRadius: 16,
                 paddingHorizontal: 16,
                 paddingVertical: 14,
                 fontSize: 16,
-                color: '#FFFFFF',
+                color: theme.colors.text,
                 borderWidth: 1,
-                borderColor: '#3F3F46',
+                borderColor: theme.colors.border,
                 minHeight: 80,
                 textAlignVertical: 'top',
               }}
               placeholder="Milk expires Friday, call mom, etc."
-              placeholderTextColor="#71717A"
+              placeholderTextColor={theme.colors.textMuted}
               value={content}
               onChangeText={setContent}
               multiline
@@ -186,22 +184,18 @@ export function FridgeScreen() {
               style={{
                 marginTop: 16,
                 borderRadius: 16,
-                backgroundColor: '#FBBF24',
+                backgroundColor: theme.colors.primary,
                 paddingVertical: 14,
                 alignItems: 'center',
-                shadowColor: '#FBBF24',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 8,
-                elevation: 4,
+                ...theme.shadows.card,
               }}
               onPress={handleCreate}
               disabled={isLoading}
             >
               {isLoading ? (
-                <ActivityIndicator color="#181A20" />
+                <ActivityIndicator color={theme.colors.background} />
               ) : (
-                <Text style={{ color: '#181A20', fontWeight: '600', fontSize: 16 }}>Pin Note 📌</Text>
+                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>Pin Note 📌</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -211,19 +205,15 @@ export function FridgeScreen() {
         <View style={{ paddingHorizontal: 24, marginTop: 20, paddingBottom: 40 }}>
           <View
             style={{
-              backgroundColor: '#23262F',
+              backgroundColor: theme.colors.card,
               borderRadius: 24,
               padding: 20,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 8,
+              ...theme.shadows.card,
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-              <NotebookPen size={20} color="#F472B6" />
-              <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFFFFF', marginLeft: 8 }}>
+              <NotebookPen size={20} color={theme.colors.primary} />
+              <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginLeft: 8 }}>
                 Sticky Wall
               </Text>
             </View>
@@ -231,7 +221,7 @@ export function FridgeScreen() {
             {notes.length === 0 ? (
               <View style={{ alignItems: 'center', paddingVertical: 24 }}>
                 <Text style={{ fontSize: 40, marginBottom: 12 }}>🗒️</Text>
-                <Text style={{ fontSize: 14, color: '#71717A' }}>No notes yet. Pin your first one!</Text>
+                <Text style={{ fontSize: 14, color: theme.colors.textMuted }}>No notes yet. Pin your first one!</Text>
               </View>
             ) : (
               <View style={{ gap: 12 }}>
@@ -250,7 +240,7 @@ export function FridgeScreen() {
                     >
                       <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                         <View style={{ flex: 1, paddingRight: 12 }}>
-                          <Text style={{ fontSize: 15, color: '#FFFFFF', lineHeight: 22 }}>
+                          <Text style={{ fontSize: 15, color: theme.colors.text, lineHeight: 22 }}>
                             {note.content}
                           </Text>
                         </View>
@@ -260,17 +250,17 @@ export function FridgeScreen() {
                             width: 32,
                             height: 32,
                             borderRadius: 16,
-                            backgroundColor: '#EF444420',
+                            backgroundColor: theme.colors.error + '20',
                             alignItems: 'center',
                             justifyContent: 'center',
                           }}
                         >
-                          <Trash2 size={16} color="#EF4444" />
+                          <Trash2 size={16} color={theme.colors.error} />
                         </TouchableOpacity>
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12 }}>
                         <StickyNote size={14} color={colorScheme.accent} />
-                        <Text style={{ fontSize: 12, color: colorScheme.accent, marginLeft: 6 }}>
+                        <Text style={{ fontSize: 12, color: theme.colors.textSecondary, marginLeft: 6 }}>
                           Pinned note
                         </Text>
                       </View>

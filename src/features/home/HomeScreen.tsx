@@ -13,16 +13,18 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { 
   CheckCircle2, 
-  Circle, 
   Calendar, 
   ShoppingCart, 
   Clock,
   ChevronRight,
   Star,
   X,
-  Sparkles
+  Search,
+  Filter,
+  MessageCircle,
 } from 'lucide-react-native';
 import { useAuthStore } from '@/store';
+import { useTheme } from '@/theme';
 import { fetchTasks, updateTaskStatus } from '@/services/tasks';
 import { fetchEvents, updateEvent } from '@/services/calendar';
 import { deleteShoppingItem, fetchShoppingItems } from '@/services/shopping';
@@ -37,54 +39,132 @@ const getErrorMessage = (error: unknown) => {
   return 'Try again.';
 };
 
-// Pastel accent circles decoration
-const AccentCircles = () => (
-  <>
-    <View
-      style={{
-        position: 'absolute',
-        top: -60,
-        right: -60,
-        width: 180,
-        height: 180,
-        borderRadius: 90,
-        backgroundColor: '#A78BFA',
-        opacity: 0.12,
-      }}
-    />
-    <View
-      style={{
-        position: 'absolute',
-        top: 200,
-        left: -80,
-        width: 160,
-        height: 160,
-        borderRadius: 80,
-        backgroundColor: '#60A5FA',
-        opacity: 0.08,
-      }}
-    />
-    <View
-      style={{
-        position: 'absolute',
-        bottom: 100,
-        right: -40,
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        backgroundColor: '#F472B6',
-        opacity: 0.1,
-      }}
-    />
-  </>
+// Filter tabs component
+const FilterTabs = ({ 
+  selected, 
+  onSelect, 
+  theme 
+}: { 
+  selected: string; 
+  onSelect: (tab: string) => void;
+  theme: any;
+}) => {
+  const tabs = ['All task', 'To do', 'In progress', 'Done'];
+  const isLight = theme.name === 'light';
+  
+  return (
+    <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+      {tabs.map((tab) => (
+        <TouchableOpacity
+          key={tab}
+          onPress={() => onSelect(tab)}
+          style={{
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+            borderRadius: 20,
+            backgroundColor: selected === tab 
+              ? theme.colors.primary
+              : theme.colors.card,
+            borderWidth: selected !== tab ? 1 : 0,
+            borderColor: theme.colors.border,
+          }}
+        >
+          <Text style={{ 
+            color: selected === tab 
+              ? theme.colors.text 
+              : theme.colors.textSecondary,
+            fontWeight: '500',
+            fontSize: 14,
+          }}>
+            {tab}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+};
+
+// Progress bar component
+const ProgressBar = ({ progress, color, theme }: { progress: number; color: string; theme: any }) => (
+  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+    <View style={{ 
+      height: 8, 
+      width: 40, 
+      backgroundColor: color, 
+      borderRadius: 4 
+    }} />
+    <View style={{ 
+      height: 8, 
+      flex: 1, 
+      backgroundColor: theme.colors.cardSecondary, 
+      borderRadius: 4,
+      overflow: 'hidden'
+    }}>
+      <View style={{ 
+        height: '100%', 
+        width: `${Math.min(progress, 100)}%`, 
+        backgroundColor: color,
+        borderRadius: 4,
+      }} />
+    </View>
+  </View>
 );
+
+// Status badge component
+const StatusBadge = ({ status, theme }: { status: string; theme: any }) => {
+  const isLight = theme.name === 'light';
+  const getStatusStyle = () => {
+    switch (status) {
+      case 'In progress':
+        return { 
+          bg: theme.colors.greenLight, 
+          text: theme.colors.success 
+        };
+      case 'To do':
+        return { 
+          bg: theme.colors.primaryLight, 
+          text: theme.colors.primary 
+        };
+      case 'Done':
+        return { 
+          bg: theme.colors.cardSecondary, 
+          text: theme.colors.textSecondary 
+        };
+      default:
+        return { 
+          bg: theme.colors.cardSecondary, 
+          text: theme.colors.textSecondary 
+        };
+    }
+  };
+  
+  const style = getStatusStyle();
+  
+  return (
+    <View style={{
+      backgroundColor: style.bg,
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      borderRadius: 12,
+      alignSelf: 'flex-start',
+    }}>
+      <Text style={{ color: style.text, fontSize: 12, fontWeight: '500' }}>
+        {status}
+      </Text>
+    </View>
+  );
+};
 
 export function HomeScreen() {
   const { profile, family } = useAuthStore();
+  const { theme } = useTheme();
+  const isLight = theme.name !== 'dark';
+  
   const [tasks, setTasks] = useState<Task[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [shopping, setShopping] = useState<ShoppingItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState('All task');
   const [taskModalVisible, setTaskModalVisible] = useState(false);
   const [eventModalVisible, setEventModalVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -118,25 +198,39 @@ export function HomeScreen() {
 
   const points = getProfilePoints(profile);
   
-  // Filter active items
-  const pendingTasks = tasks.filter(
-    (task) => task.status === 'pending' || task.status === 'waiting_approval'
-  );
-  const todayEvents = events.filter(event => {
-    const eventDate = new Date(event.event_date).toDateString();
-    const today = new Date().toDateString();
-    return eventDate === today && event.status !== 'done';
-  });
-  const upcomingEvents = events.filter(event => {
-    const eventDate = new Date(event.event_date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return eventDate > today && event.status !== 'done';
-  }).slice(0, 3);
+  // Filter tasks based on selected filter
+  const getFilteredTasks = () => {
+    switch (selectedFilter) {
+      case 'To do':
+        return tasks.filter(t => t.status === 'pending');
+      case 'In progress':
+        return tasks.filter(t => t.status === 'waiting_approval');
+      case 'Done':
+        return tasks.filter(t => t.status === 'completed');
+      default:
+        return tasks;
+    }
+  };
+  
+  const filteredTasks = getFilteredTasks();
   const shoppingOpen = shopping.filter((item) => !(item.is_checked ?? false));
 
-  // Calculate total to-do count
-  const totalTodo = pendingTasks.length + todayEvents.length + shoppingOpen.length;
+  const getTaskStatus = (task: Task) => {
+    switch (task.status) {
+      case 'pending': return 'To do';
+      case 'waiting_approval': return 'In progress';
+      case 'completed': return 'Done';
+      default: return 'To do';
+    }
+  };
+
+  const getTaskProgress = (task: Task) => {
+    switch (task.status) {
+      case 'completed': return 100;
+      case 'waiting_approval': return 60;
+      default: return 0;
+    }
+  };
 
   const openTaskModal = (task: Task) => {
     setSelectedTask(task);
@@ -225,29 +319,8 @@ export function HomeScreen() {
     }
   };
 
-  const handleQuickTaskComplete = async (task: Task) => {
-    try {
-      const updated = await updateTaskStatus(task.id, 'completed', {
-        completed_at: new Date().toISOString(),
-        approved_at: new Date().toISOString(),
-      });
-      setTasks((prev) => prev.map((item) => (item.id === task.id ? updated : item)));
-    } catch (error) {
-      Alert.alert('Update failed', getErrorMessage(error));
-    }
-  };
-
-  const greeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
-  };
-
   return (
-    <View style={{ flex: 1, backgroundColor: '#181A20' }}>
-      <AccentCircles />
-      
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 100 }}
@@ -256,365 +329,219 @@ export function HomeScreen() {
           <RefreshControl 
             refreshing={isLoading} 
             onRefresh={loadData} 
-            tintColor="#A78BFA"
+            tintColor={theme.colors.primary}
           />
         }
       >
         {/* Header */}
-        <View style={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16 }}>
-          <Text style={{ color: '#A1A1AA', fontSize: 16 }}>{greeting()} 👋</Text>
-          <Text style={{ color: '#FFFFFF', fontSize: 28, fontWeight: '700', marginTop: 4 }}>
-            {profile?.name ?? 'Welcome'}
+        <View style={{ 
+          paddingHorizontal: 24, 
+          paddingTop: 60, 
+          paddingBottom: 16,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+          <Text style={{ 
+            color: theme.colors.text, 
+            fontSize: 28, 
+            fontWeight: '700' 
+          }}>
+            My tasks
           </Text>
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            <TouchableOpacity
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: isLight ? '#FFFFFF' : theme.colors.card,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: isLight ? 1 : 0,
+                borderColor: theme.colors.border,
+              }}
+            >
+              <Search size={20} color={theme.colors.text} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: isLight ? '#FFFFFF' : theme.colors.card,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: isLight ? 1 : 0,
+                borderColor: theme.colors.border,
+              }}
+            >
+              <Clock size={20} color={theme.colors.text} />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Summary Card */}
-        <View style={{ paddingHorizontal: 24, marginTop: 8 }}>
-          <View
-            style={{
-              backgroundColor: '#23262F',
-              borderRadius: 24,
-              padding: 20,
-              flexDirection: 'row',
+        {/* Filter Tabs */}
+        <View style={{ paddingHorizontal: 24, marginBottom: 8 }}>
+          <FilterTabs 
+            selected={selectedFilter} 
+            onSelect={setSelectedFilter}
+            theme={theme}
+          />
+        </View>
+
+        {/* Sort & Filter Row */}
+        <View style={{ 
+          paddingHorizontal: 24, 
+          paddingVertical: 12,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Filter size={16} color={theme.colors.textSecondary} />
+            <Text style={{ color: theme.colors.textSecondary, fontSize: 14 }}>Filters</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={{ color: theme.colors.textSecondary, fontSize: 14 }}>Sort by</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Task Cards */}
+        <View style={{ paddingHorizontal: 24, gap: 16 }}>
+          {filteredTasks.length === 0 ? (
+            <View style={{ 
+              backgroundColor: theme.colors.card, 
+              borderRadius: 20, 
+              padding: 40,
               alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Sparkles size={20} color="#FBBF24" />
-                <Text style={{ color: '#FBBF24', fontSize: 24, fontWeight: '700', marginLeft: 8 }}>
-                  {points}
-                </Text>
-                <Text style={{ color: '#71717A', fontSize: 14, marginLeft: 6 }}>points</Text>
-              </View>
-              <Text style={{ color: '#A1A1AA', fontSize: 14, marginTop: 8 }}>
-                {totalTodo === 0 
-                  ? "You're all caught up! 🎉" 
-                  : `${totalTodo} things to do today`
-                }
+              ...theme.shadows.card,
+            }}>
+              <Text style={{ fontSize: 40, marginBottom: 12 }}>✅</Text>
+              <Text style={{ color: theme.colors.textMuted, fontSize: 16 }}>
+                No tasks in this category
               </Text>
             </View>
-            {totalTodo > 0 && (
-              <View
-                style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 28,
-                  backgroundColor: totalTodo > 5 ? '#EF444430' : totalTodo > 2 ? '#F59E0B30' : '#22C55E30',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Text style={{ 
-                  color: totalTodo > 5 ? '#EF4444' : totalTodo > 2 ? '#F59E0B' : '#22C55E', 
-                  fontSize: 24, 
-                  fontWeight: '700' 
-                }}>
-                  {totalTodo}
-                </Text>
-              </View>
-            )}
-          </View>
-        </View>
-
-        {/* Today's Events */}
-        {todayEvents.length > 0 && (
-          <View style={{ paddingHorizontal: 24, marginTop: 24 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-              <Calendar size={18} color="#60A5FA" />
-              <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600', marginLeft: 8 }}>
-                Today's Events
-              </Text>
-              <View style={{ 
-                backgroundColor: '#60A5FA30', 
-                borderRadius: 12, 
-                paddingHorizontal: 10, 
-                paddingVertical: 4,
-                marginLeft: 8
-              }}>
-                <Text style={{ color: '#60A5FA', fontSize: 12, fontWeight: '600' }}>
-                  {todayEvents.length}
-                </Text>
-              </View>
-            </View>
-            
-            {todayEvents.map((event) => (
-              <TouchableOpacity
-                key={event.id}
-                style={{
-                  backgroundColor: '#23262F',
-                  borderRadius: 16,
-                  padding: 16,
-                  marginBottom: 10,
-                  borderLeftWidth: 4,
-                  borderLeftColor: '#60A5FA',
-                }}
-                onPress={() => openEventModal(event)}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600' }}>
-                      {event.title}
-                    </Text>
-                    {event.event_time && (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-                        <Clock size={14} color="#71717A" />
-                        <Text style={{ color: '#71717A', fontSize: 13, marginLeft: 6 }}>
-                          {event.event_time}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                  <ChevronRight size={20} color="#52525B" />
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-        {/* My Tasks */}
-        <View style={{ paddingHorizontal: 24, marginTop: 24 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-            <CheckCircle2 size={18} color="#A78BFA" />
-            <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600', marginLeft: 8 }}>
-              My Tasks
-            </Text>
-            {pendingTasks.length > 0 && (
-              <View style={{ 
-                backgroundColor: '#A78BFA30', 
-                borderRadius: 12, 
-                paddingHorizontal: 10, 
-                paddingVertical: 4,
-                marginLeft: 8
-              }}>
-                <Text style={{ color: '#A78BFA', fontSize: 12, fontWeight: '600' }}>
-                  {pendingTasks.length}
-                </Text>
-              </View>
-            )}
-          </View>
-          
-          <View
-            style={{
-              backgroundColor: '#23262F',
-              borderRadius: 20,
-              padding: 16,
-            }}
-          >
-            {pendingTasks.length === 0 ? (
-              <View style={{ alignItems: 'center', paddingVertical: 24 }}>
-                <Text style={{ fontSize: 40, marginBottom: 12 }}>✅</Text>
-                <Text style={{ color: '#71717A', fontSize: 14 }}>No pending tasks</Text>
-              </View>
-            ) : (
-              pendingTasks.slice(0, 5).map((task, index) => (
+          ) : (
+            filteredTasks.map((task) => {
+              const status = getTaskStatus(task);
+              const progress = getTaskProgress(task);
+              const progressColor = status === 'In progress' ? '#A4F5A6' : 
+                                   status === 'Done' ? '#E5E7EB' : '#A28EF9';
+              
+              return (
                 <TouchableOpacity
                   key={task.id}
                   style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingVertical: 14,
-                    borderBottomWidth: index < Math.min(pendingTasks.length - 1, 4) ? 1 : 0,
-                    borderBottomColor: '#3F3F46',
+                    backgroundColor: theme.colors.card,
+                    borderRadius: 20,
+                    padding: 20,
+                    ...theme.shadows.card,
                   }}
                   onPress={() => openTaskModal(task)}
+                  activeOpacity={0.7}
                 >
-                  <TouchableOpacity
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: 14,
-                      borderWidth: 2,
-                      borderColor: task.status === 'waiting_approval' ? '#F59E0B' : '#A78BFA',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: task.status === 'waiting_approval' ? '#F59E0B20' : 'transparent',
-                    }}
-                    onPress={() => handleQuickTaskComplete(task)}
-                  >
-                    {task.status === 'waiting_approval' && (
-                      <Clock size={14} color="#F59E0B" />
-                    )}
-                  </TouchableOpacity>
-                  <View style={{ flex: 1, marginLeft: 14 }}>
-                    <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '500' }}>
-                      {task.title}
+                  {/* Status Badge */}
+                  <StatusBadge status={status} theme={theme} />
+                  
+                  {/* Task Title */}
+                  <Text style={{ 
+                    color: theme.colors.text, 
+                    fontSize: 18, 
+                    fontWeight: '600',
+                    marginTop: 12,
+                    marginBottom: 8,
+                  }}>
+                    {task.title}
+                  </Text>
+                  
+                  {/* Task Description */}
+                  {task.description && (
+                    <Text style={{ 
+                      color: theme.colors.textSecondary, 
+                      fontSize: 14,
+                      marginBottom: 12,
+                    }}>
+                      {task.description}
                     </Text>
-                    {task.status === 'waiting_approval' && (
-                      <Text style={{ color: '#F59E0B', fontSize: 12, marginTop: 2 }}>
-                        Awaiting approval
+                  )}
+                  
+                  {/* Meta Info */}
+                  <View style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    marginBottom: 16,
+                  }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Calendar size={14} color={theme.colors.textMuted} />
+                      <Text style={{ color: theme.colors.textMuted, fontSize: 13 }}>
+                        {new Date().toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </Text>
-                    )}
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <MessageCircle size={14} color={theme.colors.textMuted} />
+                      <Text style={{ color: theme.colors.textMuted, fontSize: 13 }}>
+                        {task.points_value ?? 0} points
+                      </Text>
+                    </View>
                   </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Star size={14} color="#FBBF24" fill="#FBBF24" />
-                    <Text style={{ color: '#FBBF24', fontSize: 13, fontWeight: '600', marginLeft: 4 }}>
-                      {task.points_value ?? 0}
-                    </Text>
-                  </View>
+                  
+                  {/* Progress Bar */}
+                  <ProgressBar progress={progress} color={progressColor} theme={theme} />
                 </TouchableOpacity>
-              ))
-            )}
-            
-            {pendingTasks.length > 5 && (
-              <TouchableOpacity style={{ alignItems: 'center', paddingTop: 12 }}>
-                <Text style={{ color: '#A78BFA', fontSize: 14, fontWeight: '500' }}>
-                  View all {pendingTasks.length} tasks
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
+              );
+            })
+          )}
         </View>
 
-        {/* Shopping List */}
-        <View style={{ paddingHorizontal: 24, marginTop: 24 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-            <ShoppingCart size={18} color="#F472B6" />
-            <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600', marginLeft: 8 }}>
-              Shopping List
+        {/* Shopping Quick View */}
+        {shoppingOpen.length > 0 && (
+          <View style={{ paddingHorizontal: 24, marginTop: 24 }}>
+            <Text style={{ 
+              color: theme.colors.text, 
+              fontSize: 18, 
+              fontWeight: '600',
+              marginBottom: 12,
+            }}>
+              Shopping List ({shoppingOpen.length})
             </Text>
-            {shoppingOpen.length > 0 && (
-              <View style={{ 
-                backgroundColor: '#F472B630', 
-                borderRadius: 12, 
-                paddingHorizontal: 10, 
-                paddingVertical: 4,
-                marginLeft: 8
-              }}>
-                <Text style={{ color: '#F472B6', fontSize: 12, fontWeight: '600' }}>
-                  {shoppingOpen.length}
-                </Text>
-              </View>
-            )}
-          </View>
-          
-          <View
-            style={{
-              backgroundColor: '#23262F',
+            <View style={{
+              backgroundColor: theme.colors.card,
               borderRadius: 20,
               padding: 16,
-            }}
-          >
-            {shoppingOpen.length === 0 ? (
-              <View style={{ alignItems: 'center', paddingVertical: 24 }}>
-                <Text style={{ fontSize: 40, marginBottom: 12 }}>🛒</Text>
-                <Text style={{ color: '#71717A', fontSize: 14 }}>Shopping list is empty</Text>
-              </View>
-            ) : (
-              shoppingOpen.slice(0, 5).map((item, index) => (
+              ...theme.shadows.card,
+            }}>
+              {shoppingOpen.slice(0, 3).map((item, index) => (
                 <TouchableOpacity
                   key={item.id}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
-                    paddingVertical: 14,
-                    borderBottomWidth: index < Math.min(shoppingOpen.length - 1, 4) ? 1 : 0,
-                    borderBottomColor: '#3F3F46',
+                    paddingVertical: 12,
+                    borderBottomWidth: index < Math.min(shoppingOpen.length - 1, 2) ? 1 : 0,
+                    borderBottomColor: theme.colors.border,
                   }}
                   onPress={() => handleShoppingCheck(item)}
                 >
-                  <View
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: 8,
-                      borderWidth: 2,
-                      borderColor: '#F472B6',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Circle size={0} color="transparent" />
-                  </View>
-                  <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '500', marginLeft: 14, flex: 1 }}>
+                  <View style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 6,
+                    borderWidth: 2,
+                    borderColor: theme.colors.orange,
+                    marginRight: 12,
+                  }} />
+                  <Text style={{ color: theme.colors.text, fontSize: 15, flex: 1 }}>
                     {item.name}
                   </Text>
                   {item.quantity && item.quantity > 1 && (
-                    <View style={{ 
-                      backgroundColor: '#3F3F46', 
-                      borderRadius: 8, 
-                      paddingHorizontal: 8, 
-                      paddingVertical: 2 
-                    }}>
-                      <Text style={{ color: '#A1A1AA', fontSize: 12 }}>x{item.quantity}</Text>
-                    </View>
+                    <Text style={{ color: theme.colors.textMuted, fontSize: 13 }}>
+                      x{item.quantity}
+                    </Text>
                   )}
                 </TouchableOpacity>
-              ))
-            )}
-            
-            {shoppingOpen.length > 5 && (
-              <TouchableOpacity style={{ alignItems: 'center', paddingTop: 12 }}>
-                <Text style={{ color: '#F472B6', fontSize: 14, fontWeight: '500' }}>
-                  View all {shoppingOpen.length} items
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-        {/* Upcoming Events */}
-        {upcomingEvents.length > 0 && (
-          <View style={{ paddingHorizontal: 24, marginTop: 24, marginBottom: 20 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-              <Clock size={18} color="#34D399" />
-              <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600', marginLeft: 8 }}>
-                Coming Up
-              </Text>
-            </View>
-            
-            <View
-              style={{
-                backgroundColor: '#23262F',
-                borderRadius: 20,
-                padding: 16,
-              }}
-            >
-              {upcomingEvents.map((event, index) => {
-                const eventDate = new Date(event.event_date);
-                const dayName = eventDate.toLocaleDateString('en', { weekday: 'short' });
-                const dayNum = eventDate.getDate();
-                
-                return (
-                  <TouchableOpacity
-                    key={event.id}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      paddingVertical: 12,
-                      borderBottomWidth: index < upcomingEvents.length - 1 ? 1 : 0,
-                      borderBottomColor: '#3F3F46',
-                    }}
-                    onPress={() => openEventModal(event)}
-                  >
-                    <View
-                      style={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: 12,
-                        backgroundColor: '#34D39920',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Text style={{ color: '#34D399', fontSize: 10, fontWeight: '600' }}>{dayName}</Text>
-                      <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '700' }}>{dayNum}</Text>
-                    </View>
-                    <View style={{ flex: 1, marginLeft: 14 }}>
-                      <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '500' }}>
-                        {event.title}
-                      </Text>
-                      {event.event_time && (
-                        <Text style={{ color: '#71717A', fontSize: 13, marginTop: 2 }}>
-                          {event.event_time}
-                        </Text>
-                      )}
-                    </View>
-                    <ChevronRight size={18} color="#52525B" />
-                  </TouchableOpacity>
-                );
-              })}
+              ))}
             </View>
           </View>
         )}
@@ -627,37 +554,66 @@ export function HomeScreen() {
         transparent
         onRequestClose={closeTaskModal}
       >
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' }}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
           <View
             style={{
-              backgroundColor: '#23262F',
+              backgroundColor: theme.colors.card,
               borderTopLeftRadius: 28,
               borderTopRightRadius: 28,
               padding: 24,
               paddingBottom: 40,
             }}
           >
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-              <Text style={{ color: '#FFFFFF', fontSize: 20, fontWeight: '700' }}>Task Details</Text>
+            <View style={{ 
+              flexDirection: 'row', 
+              alignItems: 'center', 
+              justifyContent: 'space-between', 
+              marginBottom: 20 
+            }}>
+              <Text style={{ color: theme.colors.text, fontSize: 20, fontWeight: '700' }}>
+                Task Details
+              </Text>
               <TouchableOpacity onPress={closeTaskModal}>
-                <X size={24} color="#71717A" />
+                <X size={24} color={theme.colors.textMuted} />
               </TouchableOpacity>
             </View>
 
             {selectedTask && (
               <>
-                <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600', marginBottom: 8 }}>
+                <StatusBadge status={getTaskStatus(selectedTask)} theme={theme} />
+                
+                <Text style={{ 
+                  color: theme.colors.text, 
+                  fontSize: 18, 
+                  fontWeight: '600', 
+                  marginTop: 16,
+                  marginBottom: 8 
+                }}>
                   {selectedTask.title}
                 </Text>
+                
                 {selectedTask.description && (
-                  <Text style={{ color: '#A1A1AA', fontSize: 14, marginBottom: 16 }}>
+                  <Text style={{ 
+                    color: theme.colors.textSecondary, 
+                    fontSize: 14, 
+                    marginBottom: 16 
+                  }}>
                     {selectedTask.description}
                   </Text>
                 )}
                 
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24 }}>
-                  <Star size={18} color="#FBBF24" fill="#FBBF24" />
-                  <Text style={{ color: '#FBBF24', fontSize: 16, fontWeight: '600', marginLeft: 6 }}>
+                <View style={{ 
+                  flexDirection: 'row', 
+                  alignItems: 'center', 
+                  marginBottom: 24 
+                }}>
+                  <Star size={18} color={theme.colors.orange} fill={theme.colors.orange} />
+                  <Text style={{ 
+                    color: theme.colors.orange, 
+                    fontSize: 16, 
+                    fontWeight: '600', 
+                    marginLeft: 6 
+                  }}>
                     {selectedTask.points_value ?? 0} points
                   </Text>
                 </View>
@@ -666,7 +622,7 @@ export function HomeScreen() {
                   <TouchableOpacity
                     style={{
                       flex: 1,
-                      backgroundColor: '#22C55E',
+                      backgroundColor: theme.colors.green,
                       borderRadius: 16,
                       paddingVertical: 16,
                       alignItems: 'center',
@@ -675,15 +631,21 @@ export function HomeScreen() {
                     disabled={isLoading}
                   >
                     {isLoading ? (
-                      <ActivityIndicator color="#FFFFFF" />
+                      <ActivityIndicator color={isLight ? '#1A1A1A' : '#FFFFFF'} />
                     ) : (
-                      <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>✓ Complete</Text>
+                      <Text style={{ 
+                        color: isLight ? '#1A1A1A' : '#FFFFFF', 
+                        fontWeight: '600', 
+                        fontSize: 16 
+                      }}>
+                        ✓ Complete
+                      </Text>
                     )}
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={{
                       flex: 1,
-                      backgroundColor: '#3F3F46',
+                      backgroundColor: theme.colors.cardSecondary,
                       borderRadius: 16,
                       paddingVertical: 16,
                       alignItems: 'center',
@@ -691,7 +653,13 @@ export function HomeScreen() {
                     onPress={() => handleTaskStatus(selectedTask, 'postponed')}
                     disabled={isLoading}
                   >
-                    <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>Later</Text>
+                    <Text style={{ 
+                      color: theme.colors.text, 
+                      fontWeight: '600', 
+                      fontSize: 16 
+                    }}>
+                      Later
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </>
@@ -707,75 +675,82 @@ export function HomeScreen() {
         transparent
         onRequestClose={closeEventModal}
       >
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' }}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
           <View
             style={{
-              backgroundColor: '#23262F',
+              backgroundColor: theme.colors.card,
               borderTopLeftRadius: 28,
               borderTopRightRadius: 28,
               padding: 24,
               paddingBottom: 40,
             }}
           >
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-              <Text style={{ color: '#FFFFFF', fontSize: 20, fontWeight: '700' }}>Event Details</Text>
+            <View style={{ 
+              flexDirection: 'row', 
+              alignItems: 'center', 
+              justifyContent: 'space-between', 
+              marginBottom: 20 
+            }}>
+              <Text style={{ color: theme.colors.text, fontSize: 20, fontWeight: '700' }}>
+                Event Details
+              </Text>
               <TouchableOpacity onPress={closeEventModal}>
-                <X size={24} color="#71717A" />
+                <X size={24} color={theme.colors.textMuted} />
               </TouchableOpacity>
             </View>
 
             <TextInput
               style={{
-                backgroundColor: '#181A20',
+                backgroundColor: theme.colors.inputBg,
                 borderRadius: 16,
                 paddingHorizontal: 16,
                 paddingVertical: 14,
                 fontSize: 16,
-                color: '#FFFFFF',
+                color: theme.colors.text,
                 borderWidth: 1,
-                borderColor: '#3F3F46',
+                borderColor: theme.colors.border,
                 marginBottom: 12,
               }}
               placeholder="Event title"
-              placeholderTextColor="#71717A"
+              placeholderTextColor={theme.colors.textMuted}
               value={eventTitle}
               onChangeText={setEventTitle}
             />
             
             <TextInput
               style={{
-                backgroundColor: '#181A20',
+                backgroundColor: theme.colors.inputBg,
                 borderRadius: 16,
                 paddingHorizontal: 16,
                 paddingVertical: 14,
                 fontSize: 16,
-                color: '#FFFFFF',
+                color: theme.colors.text,
                 borderWidth: 1,
-                borderColor: '#3F3F46',
+                borderColor: theme.colors.border,
                 marginBottom: 12,
               }}
               placeholder="Time (e.g., 14:00)"
-              placeholderTextColor="#71717A"
+              placeholderTextColor={theme.colors.textMuted}
               value={eventTime}
               onChangeText={setEventTime}
             />
             
             <TextInput
               style={{
-                backgroundColor: '#181A20',
+                backgroundColor: theme.colors.inputBg,
                 borderRadius: 16,
                 paddingHorizontal: 16,
                 paddingVertical: 14,
                 fontSize: 16,
-                color: '#FFFFFF',
+                color: theme.colors.text,
                 borderWidth: 1,
-                borderColor: '#3F3F46',
+                borderColor: theme.colors.border,
                 marginBottom: 20,
                 minHeight: 80,
                 textAlignVertical: 'top',
               }}
               placeholder="Description (optional)"
-              placeholderTextColor="#71717A"
+              placeholderTextColor={theme.colors.textMuted}
               value={eventDescription}
               onChangeText={setEventDescription}
               multiline
@@ -785,7 +760,7 @@ export function HomeScreen() {
               <TouchableOpacity
                 style={{
                   flex: 1,
-                  backgroundColor: '#60A5FA',
+                  backgroundColor: theme.colors.primary,
                   borderRadius: 16,
                   paddingVertical: 16,
                   alignItems: 'center',
@@ -802,7 +777,7 @@ export function HomeScreen() {
               <TouchableOpacity
                 style={{
                   flex: 1,
-                  backgroundColor: '#22C55E',
+                  backgroundColor: theme.colors.green,
                   borderRadius: 16,
                   paddingVertical: 16,
                   alignItems: 'center',
@@ -810,7 +785,13 @@ export function HomeScreen() {
                 onPress={handleEventClose}
                 disabled={isLoading}
               >
-                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>✓ Done</Text>
+                <Text style={{ 
+                  color: isLight ? '#1A1A1A' : '#FFFFFF', 
+                  fontWeight: '600', 
+                  fontSize: 16 
+                }}>
+                  ✓ Done
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

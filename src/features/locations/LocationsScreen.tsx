@@ -6,22 +6,24 @@ import { MapPin, Home, Briefcase, School, Navigation } from 'lucide-react-native
 import { useAuthStore } from '@/store';
 import { fetchFamilyLocations, upsertLocation } from '@/services/locations';
 import type { FamilyLocation, LocationStatus } from '@/types';
+import { useTheme } from '@/theme';
 
-const statusIcon = (status: LocationStatus) => {
+const statusIcon = (status: LocationStatus, theme: any) => {
   switch (status) {
     case 'home':
-      return <Home size={18} color="#16A34A" />;
+      return <Home size={18} color={theme.colors.success} />;
     case 'work':
-      return <Briefcase size={18} color="#2563EB" />;
+      return <Briefcase size={18} color={theme.colors.primary} />;
     case 'school':
-      return <School size={18} color="#F97316" />;
+      return <School size={18} color={theme.colors.warning} />;
     default:
-      return <Navigation size={18} color="#64748B" />;
+      return <Navigation size={18} color={theme.colors.textSecondary} />;
   }
 };
 
 export function LocationsScreen() {
   const { family, profile, familyMembers } = useAuthStore();
+  const { theme } = useTheme();
   const [locations, setLocations] = useState<FamilyLocation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<LocationStatus>('away');
@@ -167,26 +169,26 @@ export function LocationsScreen() {
   }, [markerLocations]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#0F0F0F' }}>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Dekorativni krugovi */}
-        <View style={{ position: 'absolute', top: 50, right: -10, width: 60, height: 60, borderRadius: 30, backgroundColor: '#C4DEF5', opacity: 0.4 }} />
-        <View style={{ position: 'absolute', top: 130, left: 20, width: 35, height: 35, borderRadius: 18, backgroundColor: '#C4F5A9', opacity: 0.4 }} />
+        <View style={{ position: 'absolute', top: 50, right: -10, width: 60, height: 60, borderRadius: 30, backgroundColor: theme.colors.primary, opacity: 0.4 }} />
+        <View style={{ position: 'absolute', top: 130, left: 20, width: 35, height: 35, borderRadius: 18, backgroundColor: theme.colors.primary, opacity: 0.4 }} />
 
         <View style={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 20 }}>
-          <Text style={{ color: '#FFFFFF', fontSize: 28, fontWeight: '700' }}>Family Map 📍</Text>
-          <Text style={{ color: '#6B7280', fontSize: 16, marginTop: 8 }}>Track where everyone is right now.</Text>
+          <Text style={{ color: theme.colors.text, fontSize: 28, fontWeight: '700' }}>Family Map 📍</Text>
+          <Text style={{ color: theme.colors.textSecondary, fontSize: 16, marginTop: 8 }}>Track where everyone is right now.</Text>
         </View>
 
         <View style={{ paddingHorizontal: 24 }}>
           <View style={{ 
-            backgroundColor: '#1A1A1A', 
+            backgroundColor: theme.colors.card, 
             borderRadius: 24, 
             padding: 20,
             borderWidth: 1,
-            borderColor: '#2A2A2A'
+            borderColor: theme.colors.border
           }}>
-            <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600', marginBottom: 16 }}>Live map</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600', marginBottom: 16 }}>Live map</Text>
             <View style={{ borderRadius: 16, overflow: 'hidden', height: 220 }}>
               <MapView
                 style={{ flex: 1 }}
@@ -206,14 +208,14 @@ export function LocationsScreen() {
               </MapView>
             </View>
             {markerLocations.length === 0 && (
-              <Text style={{ color: '#6B7280', fontSize: 13, marginTop: 12 }}>
+              <Text style={{ color: theme.colors.textSecondary, fontSize: 13, marginTop: 12 }}>
                 No GPS data yet. Status updates will appear here once lat/lng is provided.
               </Text>
             )}
 
-            <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600', marginTop: 24 }}>Update your status</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600', marginTop: 24 }}>Update your status</Text>
             {currentCoords && (
-              <Text style={{ color: '#6B7280', fontSize: 12, marginTop: 8 }}>
+              <Text style={{ color: theme.colors.textSecondary, fontSize: 12, marginTop: 8 }}>
                 GPS: {currentCoords.lat.toFixed(4)}, {currentCoords.lng.toFixed(4)}
               </Text>
             )}
@@ -221,30 +223,30 @@ export function LocationsScreen() {
               {(['home', 'work', 'school', 'away'] as LocationStatus[]).map((status) => {
                 const isActive = currentStatus === status;
                 const colors: Record<LocationStatus, string> = {
-                  home: '#BBF7D0',
-                  work: '#DBEAFE',
-                  school: '#FED7AA',
-                  away: '#E5E7EB'
+                  home: theme.colors.success,
+                  work: theme.colors.primary,
+                  school: theme.colors.warning,
+                  away: theme.colors.textMuted
                 };
                 return (
                   <TouchableOpacity
                     key={status}
                     style={{
-                      backgroundColor: isActive ? colors[status] : '#0F0F0F',
+                      backgroundColor: isActive ? colors[status] : theme.colors.background,
                       borderRadius: 16,
                       paddingHorizontal: 16,
                       paddingVertical: 12,
                       flexDirection: 'row',
                       alignItems: 'center',
                       borderWidth: 1,
-                      borderColor: isActive ? colors[status] : '#2A2A2A',
+                      borderColor: isActive ? colors[status] : theme.colors.border,
                     }}
                     onPress={() => handleStatusUpdate(status)}
                     disabled={isLoading}
                   >
-                    {statusIcon(status)}
+                    {statusIcon(status, theme)}
                     <Text style={{ 
-                      color: isActive ? '#1F2937' : '#9CA3AF', 
+                      color: isActive ? theme.colors.background : theme.colors.textSecondary, 
                       fontWeight: '600', 
                       marginLeft: 8, 
                       textTransform: 'capitalize' 
@@ -260,20 +262,19 @@ export function LocationsScreen() {
 
         <View style={{ paddingHorizontal: 24, marginTop: 24 }}>
           <View style={{ 
-            backgroundColor: '#1A1A1A', 
+            backgroundColor: theme.colors.card, 
             borderRadius: 24, 
             padding: 20,
             borderWidth: 1,
-            borderColor: '#2A2A2A'
+            borderColor: theme.colors.border
           }}>
-            <Text style={{ color: '#FFFFFF', fontSize: 18, fontWeight: '600' }}>Live status</Text>
-            {isLoading && <ActivityIndicator color="#7C3AED" style={{ marginTop: 16 }} />}
+            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600' }}>Live status</Text>
+            {isLoading && <ActivityIndicator color={theme.colors.primary} style={{ marginTop: 16 }} />}
             <View style={{ marginTop: 16, gap: 12 }}>
               {familyMembers.map((member, index) => {
                 const current = locationByUser.get(member.id);
                 const status = current?.status ?? 'away';
-                const colors = ['#BBF7D0', '#FBCFE8', '#FEF08A', '#DBEAFE'];
-                const bgColor = colors[index % colors.length];
+                const bgColor = theme.colors.cardSecondary;
                 return (
                   <View 
                     key={member.id} 
@@ -299,16 +300,16 @@ export function LocationsScreen() {
                         <Text style={{ fontSize: 20 }}>👤</Text>
                       </View>
                       <View style={{ marginLeft: 12 }}>
-                        <Text style={{ color: '#1F2937', fontWeight: '600', fontSize: 16 }}>{member.name}</Text>
-                        <Text style={{ color: '#4B5563', fontSize: 12, marginTop: 2, textTransform: 'capitalize' }}>{status}</Text>
+                        <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 16 }}>{member.name}</Text>
+                        <Text style={{ color: theme.colors.textSecondary, fontSize: 12, marginTop: 2, textTransform: 'capitalize' }}>{status}</Text>
                       </View>
                     </View>
-                    <MapPin size={20} color="#7C3AED" />
+                    <MapPin size={20} color={theme.colors.primary} />
                   </View>
                 );
               })}
               {familyMembers.length === 0 && (
-                <Text style={{ color: '#6B7280', fontSize: 14 }}>No members yet.</Text>
+                <Text style={{ color: theme.colors.textMuted, fontSize: 14 }}>No members yet.</Text>
               )}
             </View>
           </View>

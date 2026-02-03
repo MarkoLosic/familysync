@@ -4,13 +4,14 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ChevronRight, User, Settings, Bell, HelpCircle, Info, Menu } from 'lucide-react-native';
 import type { MainStackParamList } from '@/navigation/MainNavigator';
+import { useTheme } from '@/theme';
 
 const menuItems: { label: string; route: keyof MainStackParamList; icon: any; color: string; emoji: string }[] = [
   { label: 'Profile', route: 'Profile', icon: User, color: '#A78BFA', emoji: '👤' },
 ];
 
 // Pastel accent circles decoration
-const AccentCircles = () => (
+const AccentCircles = ({ theme }: { theme: any }) => (
   <>
     <View
       style={{
@@ -20,7 +21,7 @@ const AccentCircles = () => (
         width: 180,
         height: 180,
         borderRadius: 90,
-        backgroundColor: '#60A5FA',
+        backgroundColor: theme.colors.primaryLight,
         opacity: 0.12,
       }}
     />
@@ -32,7 +33,7 @@ const AccentCircles = () => (
         width: 120,
         height: 120,
         borderRadius: 60,
-        backgroundColor: '#A78BFA',
+        backgroundColor: theme.colors.greenLight,
         opacity: 0.1,
       }}
     />
@@ -41,10 +42,11 @@ const AccentCircles = () => (
 
 export function MoreScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
+  const { theme } = useTheme();
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#181A20' }}>
-      <AccentCircles />
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <AccentCircles theme={theme} />
       
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
         {/* Header */}
@@ -55,17 +57,17 @@ export function MoreScreen() {
                 width: 48,
                 height: 48,
                 borderRadius: 24,
-                backgroundColor: '#60A5FA',
+                backgroundColor: theme.colors.primary,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginRight: 12,
               }}
             >
-              <Menu size={24} color="#FFFFFF" />
+              <Menu size={24} color={theme.colors.card} />
             </View>
             <View>
-              <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#FFFFFF' }}>More</Text>
-              <Text style={{ fontSize: 14, color: '#A1A1AA', marginTop: 2 }}>
+              <Text style={{ fontSize: 28, fontWeight: 'bold', color: theme.colors.text }}>More</Text>
+              <Text style={{ fontSize: 14, color: theme.colors.textSecondary, marginTop: 2 }}>
                 Everything else in one place ⚙️
               </Text>
             </View>
@@ -76,17 +78,13 @@ export function MoreScreen() {
         <View style={{ paddingHorizontal: 24, paddingBottom: 40 }}>
           <View
             style={{
-              backgroundColor: '#23262F',
+              backgroundColor: theme.colors.card,
               borderRadius: 24,
               padding: 20,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 8,
+              ...theme.shadows.card,
             }}
           >
-            <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFFFFF', marginBottom: 16 }}>
+            <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginBottom: 16 }}>
               Quick Access
             </Text>
             
@@ -97,14 +95,14 @@ export function MoreScreen() {
                   <TouchableOpacity
                     key={item.label}
                     style={{
-                      backgroundColor: '#181A20',
+                      backgroundColor: theme.colors.cardSecondary,
                       borderRadius: 16,
                       padding: 16,
                       flexDirection: 'row',
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       borderWidth: 1,
-                      borderColor: '#3F3F46',
+                      borderColor: theme.colors.border,
                     }}
                     onPress={() => navigation.navigate(item.route)}
                     activeOpacity={0.7}
@@ -115,7 +113,7 @@ export function MoreScreen() {
                           width: 40,
                           height: 40,
                           borderRadius: 12,
-                          backgroundColor: `${item.color}20`,
+                          backgroundColor: theme.colors.primaryLight,
                           alignItems: 'center',
                           justifyContent: 'center',
                           marginRight: 14,
@@ -123,11 +121,11 @@ export function MoreScreen() {
                       >
                         <Text style={{ fontSize: 20 }}>{item.emoji}</Text>
                       </View>
-                      <Text style={{ fontSize: 16, fontWeight: '500', color: '#FFFFFF' }}>
+                      <Text style={{ fontSize: 16, fontWeight: '500', color: theme.colors.text }}>
                         {item.label}
                       </Text>
                     </View>
-                    <ChevronRight size={20} color="#71717A" />
+                    <ChevronRight size={20} color={theme.colors.textSecondary} />
                   </TouchableOpacity>
                 );
               })}
@@ -137,22 +135,18 @@ export function MoreScreen() {
           {/* App Info Card */}
           <View
             style={{
-              backgroundColor: '#23262F',
+              backgroundColor: theme.colors.card,
               borderRadius: 24,
               padding: 20,
               marginTop: 20,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 8,
+              ...theme.shadows.card,
             }}
           >
             <View style={{ alignItems: 'center' }}>
               <Text style={{ fontSize: 48, marginBottom: 12 }}>🏡</Text>
-              <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#FFFFFF' }}>Spona</Text>
-              <Text style={{ fontSize: 14, color: '#A1A1AA', marginTop: 4 }}>Family Connection App</Text>
-              <Text style={{ fontSize: 12, color: '#71717A', marginTop: 8 }}>Version 1.0.0</Text>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', color: theme.colors.text }}>Spona</Text>
+              <Text style={{ fontSize: 14, color: theme.colors.textSecondary, marginTop: 4 }}>Family Connection App</Text>
+              <Text style={{ fontSize: 12, color: theme.colors.textMuted, marginTop: 8 }}>Version 1.0.0</Text>
             </View>
           </View>
         </View>

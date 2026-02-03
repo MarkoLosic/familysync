@@ -14,14 +14,15 @@ import { createTask, fetchTasks, updateTaskStatus } from '@/services/tasks';
 import { getProfileId } from '@/utils/profile';
 import { hapticError, hapticImpactLight, hapticSuccess } from '@/utils/haptics';
 import type { Task } from '@/types';
+import { useTheme } from '@/theme';
 
-// Status colors
-const STATUS_COLORS: Record<Task['status'], { bg: string; text: string; accent: string }> = {
-  pending: { bg: '#3B82F620', text: '#60A5FA', accent: '#3B82F6' },
-  waiting_approval: { bg: '#F59E0B20', text: '#FBBF24', accent: '#F59E0B' },
-  completed: { bg: '#22C55E20', text: '#4ADE80', accent: '#22C55E' },
-  postponed: { bg: '#EF444420', text: '#F87171', accent: '#EF4444' },
-};
+// Status colors function
+const getStatusColors = (theme: any) => ({
+  pending: { bg: theme.colors.primaryLight, text: theme.colors.primary, accent: theme.colors.primary },
+  waiting_approval: { bg: theme.colors.orangeLight, text: theme.colors.warning, accent: theme.colors.warning },
+  completed: { bg: theme.colors.greenLight, text: theme.colors.success, accent: theme.colors.success },
+  postponed: { bg: theme.colors.error + '20', text: theme.colors.error, accent: theme.colors.error },
+});
 
 const getErrorMessage = (error: unknown) => {
   if (error instanceof Error) return error.message;
@@ -47,7 +48,7 @@ const statusLabel = (status: Task['status']) => {
 };
 
 // Pastel accent circles decoration
-const AccentCircles = () => (
+const AccentCircles = ({ theme }: { theme: any }) => (
   <>
     <View
       style={{
@@ -57,7 +58,7 @@ const AccentCircles = () => (
         width: 180,
         height: 180,
         borderRadius: 90,
-        backgroundColor: '#22C55E',
+        backgroundColor: theme.colors.greenLight,
         opacity: 0.12,
       }}
     />
@@ -69,7 +70,7 @@ const AccentCircles = () => (
         width: 120,
         height: 120,
         borderRadius: 60,
-        backgroundColor: '#3B82F6',
+        backgroundColor: theme.colors.primaryLight,
         opacity: 0.1,
       }}
     />
@@ -78,6 +79,8 @@ const AccentCircles = () => (
 
 export function TasksScreen() {
   const { family, profile } = useAuthStore();
+  const { theme } = useTheme();
+  const statusColors = getStatusColors(theme);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -162,8 +165,8 @@ export function TasksScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#181A20' }}>
-      <AccentCircles />
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <AccentCircles theme={theme} />
       
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
         {/* Header */}
@@ -174,17 +177,17 @@ export function TasksScreen() {
                 width: 48,
                 height: 48,
                 borderRadius: 24,
-                backgroundColor: '#22C55E',
+                backgroundColor: theme.colors.success,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginRight: 12,
               }}
             >
-              <ListTodo size={24} color="#FFFFFF" />
+              <ListTodo size={24} color={theme.colors.card} />
             </View>
             <View>
-              <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#FFFFFF' }}>Tasks</Text>
-              <Text style={{ fontSize: 14, color: '#A1A1AA', marginTop: 2 }}>
+              <Text style={{ fontSize: 28, fontWeight: 'bold', color: theme.colors.text }}>Tasks</Text>
+              <Text style={{ fontSize: 14, color: theme.colors.textSecondary, marginTop: 2 }}>
                 Assign and approve tasks ✅
               </Text>
             </View>
@@ -195,108 +198,99 @@ export function TasksScreen() {
         <View style={{ paddingHorizontal: 24 }}>
           <View
             style={{
-              backgroundColor: '#23262F',
+              backgroundColor: theme.colors.card,
               borderRadius: 24,
               padding: 20,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 8,
+              ...theme.shadows.card,
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-              <Plus size={20} color="#22C55E" />
-              <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFFFFF', marginLeft: 8 }}>
+              <Plus size={20} color={theme.colors.success} />
+              <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginLeft: 8 }}>
                 New Task
               </Text>
             </View>
             
             <TextInput
               style={{
-                backgroundColor: '#181A20',
+                backgroundColor: theme.colors.inputBg,
                 borderRadius: 16,
                 paddingHorizontal: 16,
                 paddingVertical: 14,
                 fontSize: 16,
-                color: '#FFFFFF',
+                color: theme.colors.text,
                 borderWidth: 1,
-                borderColor: '#3F3F46',
+                borderColor: theme.colors.border,
               }}
               placeholder="Task title"
-              placeholderTextColor="#71717A"
+              placeholderTextColor={theme.colors.textSecondary}
               value={title}
               onChangeText={setTitle}
             />
             
             <TextInput
               style={{
-                backgroundColor: '#181A20',
+                backgroundColor: theme.colors.inputBg,
                 borderRadius: 16,
                 paddingHorizontal: 16,
                 paddingVertical: 14,
                 fontSize: 16,
-                color: '#FFFFFF',
+                color: theme.colors.text,
                 borderWidth: 1,
-                borderColor: '#3F3F46',
+                borderColor: theme.colors.border,
                 marginTop: 12,
               }}
               placeholder="Description (optional)"
-              placeholderTextColor="#71717A"
+              placeholderTextColor={theme.colors.textSecondary}
               value={description}
               onChangeText={setDescription}
             />
             
             <View
               style={{
-                backgroundColor: '#181A20',
+                backgroundColor: theme.colors.inputBg,
                 borderRadius: 16,
                 paddingHorizontal: 16,
                 paddingVertical: 14,
                 marginTop: 12,
                 borderWidth: 1,
-                borderColor: '#3F3F46',
+                borderColor: theme.colors.border,
                 flexDirection: 'row',
                 alignItems: 'center',
               }}
             >
-              <Star size={18} color="#FBBF24" />
+              <Star size={18} color={theme.colors.warning} />
               <TextInput
                 style={{
                   flex: 1,
                   fontSize: 16,
-                  color: '#FFFFFF',
+                  color: theme.colors.text,
                   marginLeft: 10,
                 }}
                 placeholder="Points"
-                placeholderTextColor="#71717A"
+                placeholderTextColor={theme.colors.textSecondary}
                 value={points}
                 onChangeText={setPoints}
                 keyboardType="numeric"
               />
-              <Text style={{ color: '#71717A' }}>pts</Text>
+              <Text style={{ color: theme.colors.textSecondary }}>pts</Text>
             </View>
             
             <TouchableOpacity
               style={{
                 marginTop: 16,
                 borderRadius: 16,
-                backgroundColor: '#22C55E',
+                backgroundColor: theme.colors.success,
                 paddingVertical: 14,
                 alignItems: 'center',
-                shadowColor: '#22C55E',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 8,
-                elevation: 4,
               }}
               onPress={handleCreate}
               disabled={isLoading}
             >
               {isLoading ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator color={theme.colors.card} />
               ) : (
-                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>Add Task</Text>
+                <Text style={{ color: theme.colors.card, fontWeight: '600', fontSize: 16 }}>Add Task</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -306,19 +300,15 @@ export function TasksScreen() {
         <View style={{ paddingHorizontal: 24, marginTop: 20, paddingBottom: 40 }}>
           <View
             style={{
-              backgroundColor: '#23262F',
+              backgroundColor: theme.colors.card,
               borderRadius: 24,
               padding: 20,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 8,
+              ...theme.shadows.card,
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-              <CheckCircle2 size={20} color="#60A5FA" />
-              <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFFFFF', marginLeft: 8 }}>
+              <CheckCircle2 size={20} color={theme.colors.primary} />
+              <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginLeft: 8 }}>
                 Task List
               </Text>
             </View>
@@ -326,12 +316,12 @@ export function TasksScreen() {
             {tasks.length === 0 ? (
               <View style={{ alignItems: 'center', paddingVertical: 24 }}>
                 <Text style={{ fontSize: 40, marginBottom: 12 }}>📋</Text>
-                <Text style={{ fontSize: 14, color: '#71717A' }}>No tasks yet. Add your first one!</Text>
+                <Text style={{ fontSize: 14, color: theme.colors.textSecondary }}>No tasks yet. Add your first one!</Text>
               </View>
             ) : (
               <View style={{ gap: 12 }}>
                 {tasks.map((task) => {
-                  const statusColor = STATUS_COLORS[task.status];
+                  const statusColor = statusColors[task.status];
                   return (
                     <View
                       key={task.id}
@@ -345,7 +335,7 @@ export function TasksScreen() {
                     >
                       <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                         <View style={{ flex: 1 }}>
-                          <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>
+                          <Text style={{ fontSize: 16, fontWeight: '600', color: theme.colors.text }}>
                             {task.title}
                           </Text>
                           <Text style={{ fontSize: 12, color: statusColor.text, marginTop: 4 }}>
@@ -353,8 +343,8 @@ export function TasksScreen() {
                           </Text>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                          <Star size={14} color="#FBBF24" fill="#FBBF24" />
-                          <Text style={{ fontSize: 14, fontWeight: '600', color: '#FBBF24', marginLeft: 4 }}>
+                          <Star size={14} color={theme.colors.warning} fill={theme.colors.warning} />
+                          <Text style={{ fontSize: 14, fontWeight: '600', color: theme.colors.warning, marginLeft: 4 }}>
                             {task.points_value ?? 0}
                           </Text>
                         </View>
@@ -365,32 +355,32 @@ export function TasksScreen() {
                         <TouchableOpacity
                           style={{
                             flex: 1,
-                            backgroundColor: '#22C55E20',
+                            backgroundColor: theme.colors.greenLight,
                             borderRadius: 12,
                             paddingVertical: 10,
                             alignItems: 'center',
                             borderWidth: 1,
-                            borderColor: '#22C55E40',
+                            borderColor: theme.colors.success + '40',
                           }}
                           onPress={() => handleStatusUpdate(task, 'completed')}
                           disabled={isLoading}
                         >
-                          <Text style={{ color: '#4ADE80', fontWeight: '600' }}>✓ Done</Text>
+                          <Text style={{ color: theme.colors.success, fontWeight: '600' }}>✓ Done</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={{
                             flex: 1,
-                            backgroundColor: '#F59E0B20',
+                            backgroundColor: theme.colors.orangeLight,
                             borderRadius: 12,
                             paddingVertical: 10,
                             alignItems: 'center',
                             borderWidth: 1,
-                            borderColor: '#F59E0B40',
+                            borderColor: theme.colors.warning + '40',
                           }}
                           onPress={() => handleStatusUpdate(task, 'postponed')}
                           disabled={isLoading}
                         >
-                          <Text style={{ color: '#FBBF24', fontWeight: '600' }}>⏸ Later</Text>
+                          <Text style={{ color: theme.colors.warning, fontWeight: '600' }}>⏸ Later</Text>
                         </TouchableOpacity>
                       </View>
                     </View>

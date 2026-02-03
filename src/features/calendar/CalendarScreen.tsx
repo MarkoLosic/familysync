@@ -16,13 +16,14 @@ import { createEvent, fetchEvents } from '@/services/calendar';
 import { getProfileId } from '@/utils/profile';
 import { hapticError, hapticSuccess } from '@/utils/haptics';
 import type { CalendarEvent } from '@/types';
+import { useTheme } from '@/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const toDateKey = (value: string) => value.split('T')[0];
 
 // Pastel accent circles decoration
-const AccentCircles = () => (
+const AccentCircles = ({ theme }: { theme: any }) => (
   <>
     <View
       style={{
@@ -32,7 +33,7 @@ const AccentCircles = () => (
         width: 180,
         height: 180,
         borderRadius: 90,
-        backgroundColor: '#A78BFA',
+        backgroundColor: theme.colors.primaryLight,
         opacity: 0.15,
       }}
     />
@@ -44,7 +45,7 @@ const AccentCircles = () => (
         width: 140,
         height: 140,
         borderRadius: 70,
-        backgroundColor: '#60A5FA',
+        backgroundColor: theme.colors.greenLight,
         opacity: 0.1,
       }}
     />
@@ -53,6 +54,7 @@ const AccentCircles = () => (
 
 export function CalendarScreen() {
   const { family, profile } = useAuthStore();
+  const { theme } = useTheme();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [title, setTitle] = useState('');
@@ -77,11 +79,11 @@ export function CalendarScreen() {
     const marks: Record<string, { marked?: boolean; selected?: boolean; selectedColor?: string; dotColor?: string }> = {};
     events.forEach((event) => {
       const key = toDateKey(event.event_date);
-      marks[key] = { marked: true, dotColor: '#A78BFA' };
+      marks[key] = { marked: true, dotColor: theme.colors.primary };
     });
-    marks[selectedDate] = { ...(marks[selectedDate] || {}), selected: true, selectedColor: '#7C3AED' };
+    marks[selectedDate] = { ...(marks[selectedDate] || {}), selected: true, selectedColor: theme.colors.primary };
     return marks;
-  }, [events, selectedDate]);
+  }, [events, selectedDate, theme]);
 
   const dayEvents = events.filter((event) => toDateKey(event.event_date) === selectedDate);
 
@@ -125,8 +127,8 @@ export function CalendarScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#181A20' }}>
-      <AccentCircles />
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <AccentCircles theme={theme} />
       
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
         {/* Header */}
@@ -137,17 +139,17 @@ export function CalendarScreen() {
                 width: 48,
                 height: 48,
                 borderRadius: 24,
-                backgroundColor: '#A78BFA',
+                backgroundColor: theme.colors.primary,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginRight: 12,
               }}
             >
-              <CalendarDays size={24} color="#FFFFFF" />
+              <CalendarDays size={24} color={theme.colors.card} />
             </View>
             <View>
-              <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#FFFFFF' }}>Calendar</Text>
-              <Text style={{ fontSize: 14, color: '#A1A1AA', marginTop: 2 }}>
+              <Text style={{ fontSize: 28, fontWeight: 'bold', color: theme.colors.text }}>Calendar</Text>
+              <Text style={{ fontSize: 14, color: theme.colors.textSecondary, marginTop: 2 }}>
                 Plan your family moments 📅
               </Text>
             </View>
@@ -158,33 +160,29 @@ export function CalendarScreen() {
         <View style={{ paddingHorizontal: 24 }}>
           <View
             style={{
-              backgroundColor: '#23262F',
+              backgroundColor: theme.colors.card,
               borderRadius: 24,
               padding: 16,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 8,
+              ...theme.shadows.card,
             }}
           >
             <Calendar
               markedDates={markedDates}
               onDayPress={(day) => setSelectedDate(day.dateString)}
               theme={{
-                backgroundColor: '#23262F',
-                calendarBackground: '#23262F',
-                textSectionTitleColor: '#A1A1AA',
-                selectedDayBackgroundColor: '#7C3AED',
-                selectedDayTextColor: '#FFFFFF',
-                todayTextColor: '#A78BFA',
-                dayTextColor: '#FFFFFF',
-                textDisabledColor: '#52525B',
-                dotColor: '#A78BFA',
-                selectedDotColor: '#FFFFFF',
-                arrowColor: '#A78BFA',
-                monthTextColor: '#FFFFFF',
-                indicatorColor: '#A78BFA',
+                backgroundColor: theme.colors.card,
+                calendarBackground: theme.colors.card,
+                textSectionTitleColor: theme.colors.textSecondary,
+                selectedDayBackgroundColor: theme.colors.primary,
+                selectedDayTextColor: theme.colors.card,
+                todayTextColor: theme.colors.primary,
+                dayTextColor: theme.colors.text,
+                textDisabledColor: theme.colors.textMuted,
+                dotColor: theme.colors.primary,
+                selectedDotColor: theme.colors.card,
+                arrowColor: theme.colors.primary,
+                monthTextColor: theme.colors.text,
+                indicatorColor: theme.colors.primary,
                 textDayFontWeight: '500',
                 textMonthFontWeight: 'bold',
                 textDayHeaderFontWeight: '600',
@@ -197,35 +195,31 @@ export function CalendarScreen() {
         <View style={{ paddingHorizontal: 24, marginTop: 20 }}>
           <View
             style={{
-              backgroundColor: '#23262F',
+              backgroundColor: theme.colors.card,
               borderRadius: 24,
               padding: 20,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 8,
+              ...theme.shadows.card,
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-              <Plus size={20} color="#A78BFA" />
-              <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFFFFF', marginLeft: 8 }}>
+              <Plus size={20} color={theme.colors.primary} />
+              <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginLeft: 8 }}>
                 New Event
               </Text>
             </View>
             <TextInput
               style={{
-                backgroundColor: '#181A20',
+                backgroundColor: theme.colors.inputBg,
                 borderRadius: 16,
                 paddingHorizontal: 16,
                 paddingVertical: 14,
                 fontSize: 16,
-                color: '#FFFFFF',
+                color: theme.colors.text,
                 borderWidth: 1,
-                borderColor: '#3F3F46',
+                borderColor: theme.colors.border,
               }}
               placeholder="Event title"
-              placeholderTextColor="#71717A"
+              placeholderTextColor={theme.colors.textSecondary}
               value={title}
               onChangeText={setTitle}
             />
@@ -233,22 +227,17 @@ export function CalendarScreen() {
               style={{
                 marginTop: 16,
                 borderRadius: 16,
-                backgroundColor: '#7C3AED',
+                backgroundColor: theme.colors.primary,
                 paddingVertical: 14,
                 alignItems: 'center',
-                shadowColor: '#7C3AED',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 8,
-                elevation: 4,
               }}
               onPress={handleCreate}
               disabled={isLoading}
             >
               {isLoading ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator color={theme.colors.card} />
               ) : (
-                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>Add Event</Text>
+                <Text style={{ color: theme.colors.card, fontWeight: '600', fontSize: 16 }}>Add Event</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -258,19 +247,15 @@ export function CalendarScreen() {
         <View style={{ paddingHorizontal: 24, marginTop: 20, paddingBottom: 40 }}>
           <View
             style={{
-              backgroundColor: '#23262F',
+              backgroundColor: theme.colors.card,
               borderRadius: 24,
               padding: 20,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 8,
+              ...theme.shadows.card,
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-              <Clock size={20} color="#60A5FA" />
-              <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFFFFF', marginLeft: 8 }}>
+              <Clock size={20} color={theme.colors.primary} />
+              <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginLeft: 8 }}>
                 Events on {selectedDate}
               </Text>
             </View>
@@ -278,7 +263,7 @@ export function CalendarScreen() {
             {dayEvents.length === 0 ? (
               <View style={{ alignItems: 'center', paddingVertical: 24 }}>
                 <Text style={{ fontSize: 40, marginBottom: 12 }}>📭</Text>
-                <Text style={{ fontSize: 14, color: '#71717A' }}>No events scheduled</Text>
+                <Text style={{ fontSize: 14, color: theme.colors.textSecondary }}>No events scheduled</Text>
               </View>
             ) : (
               <View style={{ gap: 12 }}>
@@ -286,19 +271,19 @@ export function CalendarScreen() {
                   <View
                     key={event.id}
                     style={{
-                      backgroundColor: index % 2 === 0 ? '#A78BFA20' : '#60A5FA20',
+                      backgroundColor: index % 2 === 0 ? theme.colors.primaryLight : theme.colors.greenLight,
                       borderRadius: 16,
                       padding: 16,
                       borderLeftWidth: 4,
-                      borderLeftColor: index % 2 === 0 ? '#A78BFA' : '#60A5FA',
+                      borderLeftColor: index % 2 === 0 ? theme.colors.primary : theme.colors.success,
                     }}
                   >
-                    <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>
+                    <Text style={{ fontSize: 16, fontWeight: '600', color: theme.colors.text }}>
                       {event.title}
                     </Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-                      <Clock size={14} color="#A1A1AA" />
-                      <Text style={{ fontSize: 13, color: '#A1A1AA', marginLeft: 6 }}>
+                      <Clock size={14} color={theme.colors.textSecondary} />
+                      <Text style={{ fontSize: 13, color: theme.colors.textSecondary, marginLeft: 6 }}>
                         {event.event_time ?? 'All day'}
                       </Text>
                     </View>

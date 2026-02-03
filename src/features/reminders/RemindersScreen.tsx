@@ -13,12 +13,13 @@ import { useAuthStore } from '@/store';
 import { createReminder, fetchReminders, toggleReminderStatus } from '@/services/reminders';
 import { hapticError, hapticImpactLight, hapticSuccess } from '@/utils/haptics';
 import type { Reminder } from '@/types';
+import { useTheme } from '@/theme';
 
 // Member avatar emojis
 const MEMBER_EMOJIS = ['👨', '👩', '👧', '👦', '👴', '👵', '🧑'];
 
 // Pastel accent circles decoration
-const AccentCircles = () => (
+const AccentCircles = ({ theme }: { theme: any }) => (
   <>
     <View
       style={{
@@ -28,7 +29,7 @@ const AccentCircles = () => (
         width: 180,
         height: 180,
         borderRadius: 90,
-        backgroundColor: '#F472B6',
+        backgroundColor: theme.primary,
         opacity: 0.12,
       }}
     />
@@ -40,7 +41,7 @@ const AccentCircles = () => (
         width: 120,
         height: 120,
         borderRadius: 60,
-        backgroundColor: '#818CF8',
+        backgroundColor: theme.primary,
         opacity: 0.1,
       }}
     />
@@ -49,6 +50,7 @@ const AccentCircles = () => (
 
 export function RemindersScreen() {
   const { family, profile, familyMembers } = useAuthStore();
+  const { theme } = useTheme();
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [title, setTitle] = useState('');
   const [note, setNote] = useState('');
@@ -115,8 +117,8 @@ export function RemindersScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#181A20' }}>
-      <AccentCircles />
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <AccentCircles theme={theme.colors} />
       
       <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
         {/* Header */}
@@ -127,7 +129,7 @@ export function RemindersScreen() {
                 width: 48,
                 height: 48,
                 borderRadius: 24,
-                backgroundColor: '#F472B6',
+                backgroundColor: theme.colors.primary,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginRight: 12,
@@ -136,8 +138,8 @@ export function RemindersScreen() {
               <Bell size={24} color="#FFFFFF" />
             </View>
             <View>
-              <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#FFFFFF' }}>Reminders</Text>
-              <Text style={{ fontSize: 14, color: '#A1A1AA', marginTop: 2 }}>
+              <Text style={{ fontSize: 28, fontWeight: 'bold', color: theme.colors.text }}>Reminders</Text>
+              <Text style={{ fontSize: 14, color: theme.colors.textSecondary, marginTop: 2 }}>
                 Delegate tasks smartly 🔔
               </Text>
             </View>
@@ -148,54 +150,50 @@ export function RemindersScreen() {
         <View style={{ paddingHorizontal: 24 }}>
           <View
             style={{
-              backgroundColor: '#23262F',
+              backgroundColor: theme.colors.card,
               borderRadius: 24,
               padding: 20,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 8,
+              ...theme.shadows.card,
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-              <Plus size={20} color="#F472B6" />
-              <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFFFFF', marginLeft: 8 }}>
+              <Plus size={20} color={theme.colors.primary} />
+              <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginLeft: 8 }}>
                 Create Reminder
               </Text>
             </View>
             
             <TextInput
               style={{
-                backgroundColor: '#181A20',
+                backgroundColor: theme.colors.inputBg,
                 borderRadius: 16,
                 paddingHorizontal: 16,
                 paddingVertical: 14,
                 fontSize: 16,
-                color: '#FFFFFF',
+                color: theme.colors.text,
                 borderWidth: 1,
-                borderColor: '#3F3F46',
+                borderColor: theme.colors.border,
               }}
               placeholder="Reminder title"
-              placeholderTextColor="#71717A"
+              placeholderTextColor={theme.colors.textMuted}
               value={title}
               onChangeText={setTitle}
             />
             
             <TextInput
               style={{
-                backgroundColor: '#181A20',
+                backgroundColor: theme.colors.inputBg,
                 borderRadius: 16,
                 paddingHorizontal: 16,
                 paddingVertical: 14,
                 fontSize: 16,
-                color: '#FFFFFF',
+                color: theme.colors.text,
                 borderWidth: 1,
-                borderColor: '#3F3F46',
+                borderColor: theme.colors.border,
                 marginTop: 12,
               }}
               placeholder="Notes (optional)"
-              placeholderTextColor="#71717A"
+              placeholderTextColor={theme.colors.textMuted}
               value={note}
               onChangeText={setNote}
             />
@@ -203,8 +201,8 @@ export function RemindersScreen() {
             {/* Assignee Selection */}
             <View style={{ marginTop: 16 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-                <Users size={16} color="#A1A1AA" />
-                <Text style={{ fontSize: 14, color: '#A1A1AA', marginLeft: 6 }}>Assign to:</Text>
+                <Users size={16} color={theme.colors.textSecondary} />
+                <Text style={{ fontSize: 14, color: theme.colors.textSecondary, marginLeft: 6 }}>Assign to:</Text>
               </View>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                 {familyMembers.map((member, index) => (
@@ -216,20 +214,20 @@ export function RemindersScreen() {
                       paddingHorizontal: 14,
                       paddingVertical: 10,
                       borderRadius: 20,
-                      backgroundColor: assignee === member.id ? '#F472B6' : '#181A20',
+                      backgroundColor: assignee === member.id ? theme.colors.primary : theme.colors.inputBg,
                       borderWidth: 1,
-                      borderColor: assignee === member.id ? '#F472B6' : '#3F3F46',
+                      borderColor: assignee === member.id ? theme.colors.primary : theme.colors.border,
                     }}
                     onPress={() => setAssignee(member.id)}
                   >
                     <Text style={{ marginRight: 6 }}>{MEMBER_EMOJIS[index % MEMBER_EMOJIS.length]}</Text>
-                    <Text style={{ color: assignee === member.id ? '#FFFFFF' : '#A1A1AA', fontWeight: '500' }}>
+                    <Text style={{ color: assignee === member.id ? '#FFFFFF' : theme.colors.textSecondary, fontWeight: '500' }}>
                       {member.name}
                     </Text>
                   </TouchableOpacity>
                 ))}
                 {familyMembers.length === 0 && (
-                  <Text style={{ fontSize: 14, color: '#71717A' }}>No members yet</Text>
+                  <Text style={{ fontSize: 14, color: theme.colors.textMuted }}>No members yet</Text>
                 )}
               </View>
             </View>
@@ -238,14 +236,10 @@ export function RemindersScreen() {
               style={{
                 marginTop: 20,
                 borderRadius: 16,
-                backgroundColor: '#F472B6',
+                backgroundColor: theme.colors.primary,
                 paddingVertical: 14,
                 alignItems: 'center',
-                shadowColor: '#F472B6',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 8,
-                elevation: 4,
+                ...theme.shadows.card,
               }}
               onPress={handleCreate}
               disabled={isLoading}
@@ -263,19 +257,15 @@ export function RemindersScreen() {
         <View style={{ paddingHorizontal: 24, marginTop: 20, paddingBottom: 40 }}>
           <View
             style={{
-              backgroundColor: '#23262F',
+              backgroundColor: theme.colors.card,
               borderRadius: 24,
               padding: 20,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 8,
+              ...theme.shadows.card,
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-              <AlertCircle size={20} color="#818CF8" />
-              <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFFFFF', marginLeft: 8 }}>
+              <AlertCircle size={20} color={theme.colors.primary} />
+              <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginLeft: 8 }}>
                 Assigned Reminders
               </Text>
             </View>
@@ -283,7 +273,7 @@ export function RemindersScreen() {
             {reminders.length === 0 ? (
               <View style={{ alignItems: 'center', paddingVertical: 24 }}>
                 <Text style={{ fontSize: 40, marginBottom: 12 }}>🔔</Text>
-                <Text style={{ fontSize: 14, color: '#71717A' }}>No reminders yet</Text>
+                <Text style={{ fontSize: 14, color: theme.colors.textMuted }}>No reminders yet</Text>
               </View>
             ) : (
               <View style={{ gap: 12 }}>
@@ -293,11 +283,11 @@ export function RemindersScreen() {
                     <TouchableOpacity
                       key={reminder.id}
                       style={{
-                        backgroundColor: isDone ? '#22C55E15' : '#F472B615',
+                        backgroundColor: isDone ? theme.colors.success + '15' : theme.colors.primary + '15',
                         borderRadius: 16,
                         padding: 16,
                         borderLeftWidth: 4,
-                        borderLeftColor: isDone ? '#22C55E' : '#F472B6',
+                        borderLeftColor: isDone ? theme.colors.success : theme.colors.primary,
                       }}
                       onPress={() => handleToggle(reminder)}
                       activeOpacity={0.7}
@@ -308,28 +298,28 @@ export function RemindersScreen() {
                             style={{
                               fontSize: 16,
                               fontWeight: '600',
-                              color: isDone ? '#71717A' : '#FFFFFF',
+                              color: isDone ? theme.colors.textMuted : theme.colors.text,
                               textDecorationLine: isDone ? 'line-through' : 'none',
                             }}
                           >
                             {reminder.title}
                           </Text>
                           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-                            <Text style={{ fontSize: 12, color: isDone ? '#52525B' : '#A1A1AA' }}>
+                            <Text style={{ fontSize: 12, color: isDone ? theme.colors.textMuted : theme.colors.textSecondary }}>
                               {isDone ? '✓ Done' : '○ Pending'}
                             </Text>
                             {reminder.assigned_to && (
-                              <Text style={{ fontSize: 12, color: '#71717A', marginLeft: 8 }}>
+                              <Text style={{ fontSize: 12, color: theme.colors.textMuted, marginLeft: 8 }}>
                                 · {assigneeById.get(reminder.assigned_to) ?? 'Assigned'}
                               </Text>
                             )}
                           </View>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                          <Bell size={18} color={isDone ? '#52525B' : '#F472B6'} />
+                          <Bell size={18} color={isDone ? theme.colors.textMuted : theme.colors.primary} />
                           <CheckCircle2
                             size={20}
-                            color={isDone ? '#22C55E' : '#52525B'}
+                            color={isDone ? theme.colors.success : theme.colors.textMuted}
                             style={{ marginLeft: 8 }}
                           />
                         </View>
