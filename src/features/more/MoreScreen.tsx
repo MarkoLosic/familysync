@@ -5,6 +5,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ChevronRight, User, Settings, Bell, HelpCircle, Info, Menu } from 'lucide-react-native';
 import type { MainStackParamList } from '@/navigation/MainNavigator';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 
 const menuItems: { label: string; route: keyof MainStackParamList; icon: any; color: string; emoji: string }[] = [
   { label: 'Profile', route: 'Profile', icon: User, color: '#A78BFA', emoji: '👤' },
@@ -43,6 +44,7 @@ const AccentCircles = ({ theme }: { theme: any }) => (
 export function MoreScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const { theme } = useTheme();
+  const { t } = useI18n();
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
@@ -66,9 +68,9 @@ export function MoreScreen() {
               <Menu size={24} color={theme.colors.card} />
             </View>
             <View>
-              <Text style={{ fontSize: 28, fontWeight: 'bold', color: theme.colors.text }}>More</Text>
+              <Text style={{ fontSize: 28, fontWeight: 'bold', color: theme.colors.text }}>{t('more.title')}</Text>
               <Text style={{ fontSize: 14, color: theme.colors.textSecondary, marginTop: 2 }}>
-                Everything else in one place ⚙️
+                {t('more.subtitle')} ⚙️
               </Text>
             </View>
           </View>
@@ -85,7 +87,7 @@ export function MoreScreen() {
             }}
           >
             <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginBottom: 16 }}>
-              Quick Access
+              {t('more.quickAccess')}
             </Text>
             
             <View style={{ gap: 12 }}>
@@ -122,7 +124,7 @@ export function MoreScreen() {
                         <Text style={{ fontSize: 20 }}>{item.emoji}</Text>
                       </View>
                       <Text style={{ fontSize: 16, fontWeight: '500', color: theme.colors.text }}>
-                        {item.label}
+                        {item.route === 'Profile' ? t('more.profile') : item.label}
                       </Text>
                     </View>
                     <ChevronRight size={20} color={theme.colors.textSecondary} />
@@ -145,7 +147,7 @@ export function MoreScreen() {
             <View style={{ alignItems: 'center' }}>
               <Text style={{ fontSize: 48, marginBottom: 12 }}>🏡</Text>
               <Text style={{ fontSize: 20, fontWeight: 'bold', color: theme.colors.text }}>Spona</Text>
-              <Text style={{ fontSize: 14, color: theme.colors.textSecondary, marginTop: 4 }}>Family Connection App</Text>
+              <Text style={{ fontSize: 14, color: theme.colors.textSecondary, marginTop: 4 }}>{t('more.appTagline')}</Text>
               <Text style={{ fontSize: 12, color: theme.colors.textMuted, marginTop: 8 }}>Version 1.0.0</Text>
             </View>
           </View>

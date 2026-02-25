@@ -18,6 +18,7 @@ import { supabase } from '@/services/supabase';
 import { useAuthStore } from '@/store';
 import type { AuthStackParamList } from '@/navigation/AuthNavigator';
 import { darkTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 
 // Avatar komponenta za 3D stil
 const Avatar = ({ emoji, size = 60, color = darkTheme.colors.primary }: { emoji: string; size?: number; color?: string }) => (
@@ -50,10 +51,11 @@ export function LoginScreen() {
   const insets = useSafeAreaInsets();
   const bottomInset = Platform.OS === 'ios' ? Math.max(insets.bottom, 16) : 0;
   const theme = darkTheme.colors;
+  const { t } = useI18n();
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Missing info', 'Please enter your email and password.');
+      Alert.alert(t('common.missingInfo'), t('auth.login.enterEmailPassword'));
       return;
     }
 
@@ -65,13 +67,13 @@ export function LoginScreen() {
       });
       if (error) throw error;
       if (!data.session) {
-        Alert.alert('Sign in failed', 'Account not confirmed yet.');
+        Alert.alert(t('auth.login.signInFailed'), t('auth.login.accountNotConfirmed'));
         return;
       }
       setSession(data.session);
       await refreshProfileAndFamily();
     } catch (error) {
-      Alert.alert('Login failed', error instanceof Error ? error.message : 'Try again.');
+      Alert.alert(t('auth.login.loginFailed'), error instanceof Error ? error.message : t('common.tryAgain'));
     } finally {
       setIsLoading(false);
     }
@@ -111,19 +113,19 @@ export function LoginScreen() {
               </View>
               
               <Text style={{ fontSize: 32, fontWeight: 'bold', color: theme.text, marginTop: 24, textAlign: 'center', lineHeight: 40 }}>
-                Let's get you{'\n'}signed in!
+                {t('auth.login.heroLine1')}{'\n'}{t('auth.login.heroLine2')}
               </Text>
             </View>
 
             {/* Forma */}
             <View style={{ marginTop: 20 }}>
               <Text style={{ color: theme.textSecondary, fontSize: 13, marginBottom: 16, marginLeft: 4 }}>
-                You don't have an account yet?{' '}
+                {t('auth.login.noAccount')}{' '}
                 <Text 
                   style={{ color: theme.text, fontWeight: '600' }}
                   onPress={() => navigation.navigate('Register')}
                 >
-                  Sign Up
+                  {t('auth.login.signUp')}
                 </Text>
               </Text>
 
@@ -141,7 +143,7 @@ export function LoginScreen() {
                 <Mail size={20} color={theme.textSecondary} />
                 <TextInput
                   style={{ flex: 1, marginLeft: 12, fontSize: 16, color: theme.text }}
-                  placeholder="Email"
+                  placeholder={t('common.email')}
                   placeholderTextColor={theme.textMuted}
                   autoCapitalize="none"
                   keyboardType="email-address"
@@ -166,7 +168,7 @@ export function LoginScreen() {
                 <Lock size={20} color={theme.textSecondary} />
                 <TextInput
                   style={{ flex: 1, marginLeft: 12, fontSize: 16, color: theme.text }}
-                  placeholder="Password"
+                  placeholder={t('common.password')}
                   placeholderTextColor={theme.textMuted}
                   secureTextEntry
                   autoComplete="password"
@@ -177,7 +179,7 @@ export function LoginScreen() {
               </View>
 
               <TouchableOpacity style={{ alignSelf: 'flex-start', marginBottom: 24, marginLeft: 4 }}>
-                <Text style={{ color: theme.textSecondary, fontSize: 13 }}>Forgot password?</Text>
+                <Text style={{ color: theme.textSecondary, fontSize: 13 }}>{t('auth.login.forgotPassword')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -199,7 +201,7 @@ export function LoginScreen() {
                 {isLoading ? (
                   <ActivityIndicator color={theme.background} />
                 ) : (
-                  <Text style={{ color: theme.background, fontWeight: '700', fontSize: 16 }}>Sign In</Text>
+                  <Text style={{ color: theme.background, fontWeight: '700', fontSize: 16 }}>{t('auth.login.signIn')}</Text>
                 )}
               </TouchableOpacity>
             </View>

@@ -12,6 +12,7 @@ import { Users, KeyRound, Home, Sparkles } from 'lucide-react-native';
 import { createFamily, joinFamily } from '@/services/family';
 import { useAuthStore } from '@/store';
 import { darkTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 
 // Pastel accent circles decoration
 const AccentCircles = () => (
@@ -62,11 +63,12 @@ export function FamilyOnboardingScreen() {
   const [inviteCode, setInviteCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const theme = darkTheme.colors;
+  const { t } = useI18n();
 
   const handleCreate = async () => {
     if (!profile) return;
     if (!familyName.trim()) {
-      Alert.alert('Missing info', 'Enter your family name.');
+      Alert.alert(t('common.missingInfo'), t('auth.family.enterFamilyName'));
       return;
     }
 
@@ -74,9 +76,9 @@ export function FamilyOnboardingScreen() {
       setIsLoading(true);
       const result = await createFamily(familyName.trim(), profile);
       await refreshProfileAndFamily();
-      Alert.alert('🎉 Family created!', `Invite code: ${result.inviteCode}\n\nShare this code with your family members!`);
+      Alert.alert(t('auth.family.createdTitle'), `${t('auth.family.inviteCode')}: ${result.inviteCode}\n\n${t('auth.family.shareCode')}`);
     } catch (error) {
-      Alert.alert('Create failed', error instanceof Error ? error.message : 'Try again.');
+      Alert.alert(t('common.createFailed'), error instanceof Error ? error.message : t('common.tryAgain'));
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +87,7 @@ export function FamilyOnboardingScreen() {
   const handleJoin = async () => {
     if (!profile) return;
     if (!inviteCode.trim()) {
-      Alert.alert('Missing info', 'Enter the invite code.');
+      Alert.alert(t('common.missingInfo'), t('auth.family.enterInviteCode'));
       return;
     }
 
@@ -94,7 +96,7 @@ export function FamilyOnboardingScreen() {
       await joinFamily(inviteCode, profile);
       await refreshProfileAndFamily();
     } catch (error) {
-      Alert.alert('Join failed', error instanceof Error ? error.message : 'Try again.');
+      Alert.alert(t('auth.family.joinFailed'), error instanceof Error ? error.message : t('common.tryAgain'));
     } finally {
       setIsLoading(false);
     }
@@ -132,10 +134,10 @@ export function FamilyOnboardingScreen() {
               <Text style={{ fontSize: 50 }}>🏡</Text>
             </View>
             <Text style={{ fontSize: 28, fontWeight: 'bold', color: theme.text, marginTop: 20, textAlign: 'center' }}>
-              Set up your family
+              {t('auth.family.setupTitle')}
             </Text>
             <Text style={{ fontSize: 15, color: theme.textSecondary, marginTop: 8, textAlign: 'center', lineHeight: 22 }}>
-              Create a new family or join one{'\n'}with an invite code
+              {t('auth.family.setupSubtitleLine1')}{'\n'}{t('auth.family.setupSubtitleLine2')}
             </Text>
           </View>
 
@@ -168,8 +170,8 @@ export function FamilyOnboardingScreen() {
                 <Users size={22} color={theme.primary} />
               </View>
               <View>
-                <Text style={{ fontSize: 18, fontWeight: '600', color: theme.text }}>Create a Family</Text>
-                <Text style={{ fontSize: 13, color: theme.textMuted, marginTop: 2 }}>Start your family hub</Text>
+                <Text style={{ fontSize: 18, fontWeight: '600', color: theme.text }}>{t('auth.family.createFamily')}</Text>
+                <Text style={{ fontSize: 13, color: theme.textMuted, marginTop: 2 }}>{t('auth.family.startHub')}</Text>
               </View>
             </View>
             
@@ -184,7 +186,7 @@ export function FamilyOnboardingScreen() {
                 borderWidth: 1,
                 borderColor: theme.border,
               }}
-              placeholder="Family name (e.g., The Smiths)"
+              placeholder={t('auth.family.familyNamePlaceholder')}
               placeholderTextColor={theme.textMuted}
               value={familyName}
               onChangeText={setFamilyName}
@@ -213,7 +215,7 @@ export function FamilyOnboardingScreen() {
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Sparkles size={18} color={theme.text} />
                   <Text style={{ color: theme.text, fontWeight: '600', fontSize: 16, marginLeft: 8 }}>
-                    Create Family
+                    {t('auth.family.createFamily')}
                   </Text>
                 </View>
               )}
@@ -223,7 +225,7 @@ export function FamilyOnboardingScreen() {
           {/* Divider */}
           <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 8 }}>
             <View style={{ flex: 1, height: 1, backgroundColor: theme.border }} />
-            <Text style={{ color: theme.textMuted, marginHorizontal: 16, fontSize: 14 }}>or</Text>
+            <Text style={{ color: theme.textMuted, marginHorizontal: 16, fontSize: 14 }}>{t('common.or')}</Text>
             <View style={{ flex: 1, height: 1, backgroundColor: theme.border }} />
           </View>
 
@@ -256,8 +258,8 @@ export function FamilyOnboardingScreen() {
                 <KeyRound size={22} color={theme.pink} />
               </View>
               <View>
-                <Text style={{ fontSize: 18, fontWeight: '600', color: theme.text }}>Join with Code</Text>
-                <Text style={{ fontSize: 13, color: theme.textMuted, marginTop: 2 }}>Enter family invite code</Text>
+                <Text style={{ fontSize: 18, fontWeight: '600', color: theme.text }}>{t('auth.family.joinWithCode')}</Text>
+                <Text style={{ fontSize: 13, color: theme.textMuted, marginTop: 2 }}>{t('auth.family.enterFamilyInviteCode')}</Text>
               </View>
             </View>
             
@@ -274,7 +276,7 @@ export function FamilyOnboardingScreen() {
                 textTransform: 'uppercase',
                 letterSpacing: 2,
               }}
-              placeholder="Enter invite code"
+              placeholder={t('auth.family.enterInviteCode')}
               placeholderTextColor={theme.textMuted}
               autoCapitalize="characters"
               value={inviteCode}
@@ -304,7 +306,7 @@ export function FamilyOnboardingScreen() {
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Home size={18} color={theme.text} />
                   <Text style={{ color: theme.text, fontWeight: '600', fontSize: 16, marginLeft: 8 }}>
-                    Join Family
+                    {t('auth.family.joinFamily')}
                   </Text>
                 </View>
               )}

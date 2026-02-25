@@ -30,53 +30,53 @@ import { fetchEvents, updateEvent } from '@/services/calendar';
 import { deleteShoppingItem, fetchShoppingItems } from '@/services/shopping';
 import { getProfilePoints } from '@/utils/profile';
 import type { Task, CalendarEvent, ShoppingItem } from '@/types';
+import { useI18n } from '@/i18n';
 
-const getErrorMessage = (error: unknown) => {
+const getErrorMessage = (error: unknown, fallback: string) => {
   if (error instanceof Error) return error.message;
   if (typeof error === 'object' && error && 'message' in error) {
-    return String((error as { message?: unknown }).message ?? 'Try again.');
+    return String((error as { message?: unknown }).message ?? fallback);
   }
-  return 'Try again.';
+  return fallback;
 };
 
 // Filter tabs component
 const FilterTabs = ({ 
   selected, 
   onSelect, 
-  theme 
+  tabs,
+  theme,
 }: { 
   selected: string; 
   onSelect: (tab: string) => void;
+  tabs: Array<{ key: string; label: string }>;
   theme: any;
 }) => {
-  const tabs = ['All task', 'To do', 'In progress', 'Done'];
-  const isLight = theme.name === 'light';
-  
   return (
     <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
       {tabs.map((tab) => (
         <TouchableOpacity
-          key={tab}
-          onPress={() => onSelect(tab)}
+          key={tab.key}
+          onPress={() => onSelect(tab.key)}
           style={{
             paddingHorizontal: 16,
             paddingVertical: 10,
             borderRadius: 20,
-            backgroundColor: selected === tab 
+            backgroundColor: selected === tab.key
               ? theme.colors.primary
               : theme.colors.card,
-            borderWidth: selected !== tab ? 1 : 0,
+            borderWidth: selected !== tab.key ? 1 : 0,
             borderColor: theme.colors.border,
           }}
         >
           <Text style={{ 
-            color: selected === tab 
+            color: selected === tab.key
               ? theme.colors.text 
               : theme.colors.textSecondary,
             fontWeight: '500',
             fontSize: 14,
           }}>
-            {tab}
+            {tab.label}
           </Text>
         </TouchableOpacity>
       ))}
@@ -111,21 +111,20 @@ const ProgressBar = ({ progress, color, theme }: { progress: number; color: stri
 );
 
 // Status badge component
-const StatusBadge = ({ status, theme }: { status: string; theme: any }) => {
-  const isLight = theme.name === 'light';
+const StatusBadge = ({ statusKey, label, theme }: { statusKey: string; label: string; theme: any }) => {
   const getStatusStyle = () => {
-    switch (status) {
-      case 'In progress':
+    switch (statusKey) {
+      case 'progress':
         return { 
           bg: theme.colors.greenLight, 
           text: theme.colors.success 
         };
-      case 'To do':
+      case 'todo':
         return { 
           bg: theme.colors.primaryLight, 
           text: theme.colors.primary 
         };
-      case 'Done':
+      case 'done':
         return { 
           bg: theme.colors.cardSecondary, 
           text: theme.colors.textSecondary 
@@ -149,7 +148,7 @@ const StatusBadge = ({ status, theme }: { status: string; theme: any }) => {
       alignSelf: 'flex-start',
     }}>
       <Text style={{ color: style.text, fontSize: 12, fontWeight: '500' }}>
-        {status}
+        {label}
       </Text>
     </View>
   );
@@ -158,13 +157,14 @@ const StatusBadge = ({ status, theme }: { status: string; theme: any }) => {
 export function HomeScreen() {
   const { profile, family } = useAuthStore();
   const { theme } = useTheme();
+  const { t, language } = useI18n();
   const isLight = theme.name !== 'dark';
   
   const [tasks, setTasks] = useState<Task[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [shopping, setShopping] = useState<ShoppingItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState('All task');
+  const [selectedFilter, setSelectedFilter] = useState('all');
   const [taskModalVisible, setTaskModalVisible] = useState(false);
   const [eventModalVisible, setEventModalVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -197,15 +197,21 @@ export function HomeScreen() {
   );
 
   const points = getProfilePoints(profile);
+  const filterTabs = [
+    { key: 'all', label: t('home.filterAll') },
+    { key: 'todo', label: t('home.filterToDo') },
+    { key: 'progress', label: t('home.filterInProgress') },
+    { key: 'done', label: t('home.filterDone') },
+  ];
   
   // Filter tasks based on selected filter
   const getFilteredTasks = () => {
     switch (selectedFilter) {
-      case 'To do':
+      case 'todo':
         return tasks.filter(t => t.status === 'pending');
-      case 'In progress':
+      case 'progress':
         return tasks.filter(t => t.status === 'waiting_approval');
-      case 'Done':
+      case 'done':
         return tasks.filter(t => t.status === 'completed');
       default:
         return tasks;
@@ -217,10 +223,23 @@ export function HomeScreen() {
 
   const getTaskStatus = (task: Task) => {
     switch (task.status) {
-      case 'pending': return 'To do';
-      case 'waiting_approval': return 'In progress';
-      case 'completed': return 'Done';
-      default: return 'To do';
+      case 'pending': return 'todo';
+      case 'waiting_approval': return 'progress';
+      case 'completed': return 'done';
+      default: return 'todo';
+    }
+  };
+
+  const getTaskStatusLabel = (statusKey: string) => {
+    switch (statusKey) {
+      case 'todo':
+        return t('home.filterToDo');
+      case 'progress':
+        return t('home.filterInProgress');
+      case 'done':
+        return t('home.filterDone');
+      default:
+        return t('home.filterToDo');
     }
   };
 
@@ -268,7 +287,7 @@ export function HomeScreen() {
       setTasks((prev) => prev.map((item) => (item.id === task.id ? updated : item)));
       closeTaskModal();
     } catch (error) {
-      Alert.alert('Update failed', getErrorMessage(error));
+      Alert.alert(t('common.updateFailed'), getErrorMessage(error, t('common.tryAgain')));
     } finally {
       setIsLoading(false);
     }
@@ -277,7 +296,7 @@ export function HomeScreen() {
   const handleEventUpdate = async () => {
     if (!selectedEvent) return;
     if (!eventTitle.trim()) {
-      Alert.alert('Missing info', 'Enter event title.');
+      Alert.alert(t('common.missingInfo'), t('calendar.enterEventTitle'));
       return;
     }
     try {
@@ -290,7 +309,7 @@ export function HomeScreen() {
       setEvents((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
       closeEventModal();
     } catch (error) {
-      Alert.alert('Update failed', getErrorMessage(error));
+      Alert.alert(t('common.updateFailed'), getErrorMessage(error, t('common.tryAgain')));
     } finally {
       setIsLoading(false);
     }
@@ -304,7 +323,7 @@ export function HomeScreen() {
       setEvents((prev) => prev.filter((item) => item.id !== updated.id));
       closeEventModal();
     } catch (error) {
-      Alert.alert('Close failed', getErrorMessage(error));
+      Alert.alert(t('home.closeFailed'), getErrorMessage(error, t('common.tryAgain')));
     } finally {
       setIsLoading(false);
     }
@@ -315,7 +334,7 @@ export function HomeScreen() {
       await deleteShoppingItem(item.id);
       setShopping((prev) => prev.filter((entry) => entry.id !== item.id));
     } catch (error) {
-      Alert.alert('Update failed', getErrorMessage(error));
+      Alert.alert(t('common.updateFailed'), getErrorMessage(error, t('common.tryAgain')));
     }
   };
 
@@ -347,7 +366,7 @@ export function HomeScreen() {
             fontSize: 28, 
             fontWeight: '700' 
           }}>
-            My tasks
+            {t('home.title')}
           </Text>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <TouchableOpacity
@@ -386,6 +405,7 @@ export function HomeScreen() {
           <FilterTabs 
             selected={selectedFilter} 
             onSelect={setSelectedFilter}
+            tabs={filterTabs}
             theme={theme}
           />
         </View>
@@ -400,10 +420,10 @@ export function HomeScreen() {
         }}>
           <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <Filter size={16} color={theme.colors.textSecondary} />
-            <Text style={{ color: theme.colors.textSecondary, fontSize: 14 }}>Filters</Text>
+            <Text style={{ color: theme.colors.textSecondary, fontSize: 14 }}>{t('home.filters')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={{ color: theme.colors.textSecondary, fontSize: 14 }}>Sort by</Text>
+            <Text style={{ color: theme.colors.textSecondary, fontSize: 14 }}>{t('home.sortBy')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -419,15 +439,15 @@ export function HomeScreen() {
             }}>
               <Text style={{ fontSize: 40, marginBottom: 12 }}>✅</Text>
               <Text style={{ color: theme.colors.textMuted, fontSize: 16 }}>
-                No tasks in this category
+                {t('home.noTasksInCategory')}
               </Text>
             </View>
           ) : (
             filteredTasks.map((task) => {
               const status = getTaskStatus(task);
               const progress = getTaskProgress(task);
-              const progressColor = status === 'In progress' ? '#A4F5A6' : 
-                                   status === 'Done' ? '#E5E7EB' : '#A28EF9';
+              const progressColor = status === 'progress' ? '#A4F5A6' : 
+                                   status === 'done' ? '#E5E7EB' : '#A28EF9';
               
               return (
                 <TouchableOpacity
@@ -442,7 +462,7 @@ export function HomeScreen() {
                   activeOpacity={0.7}
                 >
                   {/* Status Badge */}
-                  <StatusBadge status={status} theme={theme} />
+                  <StatusBadge statusKey={status} label={getTaskStatusLabel(status)} theme={theme} />
                   
                   {/* Task Title */}
                   <Text style={{ 
@@ -476,13 +496,13 @@ export function HomeScreen() {
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <Calendar size={14} color={theme.colors.textMuted} />
                       <Text style={{ color: theme.colors.textMuted, fontSize: 13 }}>
-                        {new Date().toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        {new Date().toLocaleDateString(language, { month: 'short', day: 'numeric', year: 'numeric' })}
                       </Text>
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <MessageCircle size={14} color={theme.colors.textMuted} />
                       <Text style={{ color: theme.colors.textMuted, fontSize: 13 }}>
-                        {task.points_value ?? 0} points
+                        {task.points_value ?? 0} {t('common.pointsLower')}
                       </Text>
                     </View>
                   </View>
@@ -504,7 +524,7 @@ export function HomeScreen() {
               fontWeight: '600',
               marginBottom: 12,
             }}>
-              Shopping List ({shoppingOpen.length})
+              {t('home.shoppingList')} ({shoppingOpen.length})
             </Text>
             <View style={{
               backgroundColor: theme.colors.card,
@@ -571,7 +591,7 @@ export function HomeScreen() {
               marginBottom: 20 
             }}>
               <Text style={{ color: theme.colors.text, fontSize: 20, fontWeight: '700' }}>
-                Task Details
+                {t('home.taskDetails')}
               </Text>
               <TouchableOpacity onPress={closeTaskModal}>
                 <X size={24} color={theme.colors.textMuted} />
@@ -580,7 +600,11 @@ export function HomeScreen() {
 
             {selectedTask && (
               <>
-                <StatusBadge status={getTaskStatus(selectedTask)} theme={theme} />
+                <StatusBadge
+                  statusKey={getTaskStatus(selectedTask)}
+                  label={getTaskStatusLabel(getTaskStatus(selectedTask))}
+                  theme={theme}
+                />
                 
                 <Text style={{ 
                   color: theme.colors.text, 
@@ -614,7 +638,7 @@ export function HomeScreen() {
                     fontWeight: '600', 
                     marginLeft: 6 
                   }}>
-                    {selectedTask.points_value ?? 0} points
+                    {selectedTask.points_value ?? 0} {t('common.pointsLower')}
                   </Text>
                 </View>
 
@@ -638,7 +662,7 @@ export function HomeScreen() {
                         fontWeight: '600', 
                         fontSize: 16 
                       }}>
-                        ✓ Complete
+                        ✓ {t('home.complete')}
                       </Text>
                     )}
                   </TouchableOpacity>
@@ -658,7 +682,7 @@ export function HomeScreen() {
                       fontWeight: '600', 
                       fontSize: 16 
                     }}>
-                      Later
+                      {t('common.later')}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -692,7 +716,7 @@ export function HomeScreen() {
               marginBottom: 20 
             }}>
               <Text style={{ color: theme.colors.text, fontSize: 20, fontWeight: '700' }}>
-                Event Details
+                {t('home.eventDetails')}
               </Text>
               <TouchableOpacity onPress={closeEventModal}>
                 <X size={24} color={theme.colors.textMuted} />
@@ -711,7 +735,7 @@ export function HomeScreen() {
                 borderColor: theme.colors.border,
                 marginBottom: 12,
               }}
-              placeholder="Event title"
+              placeholder={t('calendar.eventTitle')}
               placeholderTextColor={theme.colors.textMuted}
               value={eventTitle}
               onChangeText={setEventTitle}
@@ -729,7 +753,7 @@ export function HomeScreen() {
                 borderColor: theme.colors.border,
                 marginBottom: 12,
               }}
-              placeholder="Time (e.g., 14:00)"
+              placeholder={t('home.timePlaceholder')}
               placeholderTextColor={theme.colors.textMuted}
               value={eventTime}
               onChangeText={setEventTime}
@@ -749,7 +773,7 @@ export function HomeScreen() {
                 minHeight: 80,
                 textAlignVertical: 'top',
               }}
-              placeholder="Description (optional)"
+              placeholder={t('common.descriptionOptional')}
               placeholderTextColor={theme.colors.textMuted}
               value={eventDescription}
               onChangeText={setEventDescription}
@@ -771,7 +795,7 @@ export function HomeScreen() {
                 {isLoading ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                  <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>Save</Text>
+                  <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>{t('common.save')}</Text>
                 )}
               </TouchableOpacity>
               <TouchableOpacity
@@ -790,7 +814,7 @@ export function HomeScreen() {
                   fontWeight: '600', 
                   fontSize: 16 
                 }}>
-                  ✓ Done
+                  ✓ {t('common.done')}
                 </Text>
               </TouchableOpacity>
             </View>

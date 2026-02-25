@@ -14,10 +14,12 @@ import { useAuthStore } from '@/store';
 import { supabase } from '@/services/supabase';
 import { getProfilePoints } from '@/utils/profile';
 import { useTheme } from '@/theme';
+import { AppLanguage, languageOptions, useI18n } from '@/i18n';
 
 export function ProfileScreen() {
   const { profile, family, familyMembers, signOut } = useAuthStore();
   const { theme, themeName, toggleTheme } = useTheme();
+  const { t, language, setLanguage } = useI18n();
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [username, setUsername] = useState(profile?.username ?? profile?.name ?? '');
@@ -55,7 +57,7 @@ export function ProfileScreen() {
   const handleCopy = async () => {
     if (!inviteCode) return;
     await Clipboard.setStringAsync(inviteCode);
-    Alert.alert('Copied', 'Invite code copied to clipboard.');
+    Alert.alert(t('profile.copiedTitle'), t('profile.copiedMessage'));
   };
 
   const handleSignOut = async () => {
@@ -65,7 +67,7 @@ export function ProfileScreen() {
   const handleUpdateProfile = async () => {
     if (!profile) return;
     if (!username.trim()) {
-      Alert.alert('Missing info', 'Enter a username.');
+      Alert.alert(t('profile.missingInfoTitle'), t('profile.enterUsername'));
       return;
     }
     setIsLoading(true);
@@ -75,9 +77,9 @@ export function ProfileScreen() {
         .update({ username: username.trim(), name: username.trim() })
         .eq('id', profile.id ?? profile.user_id);
       if (error) throw error;
-      Alert.alert('Updated', 'Profile updated successfully.');
+      Alert.alert(t('profile.updatedTitle'), t('profile.profileUpdated'));
     } catch (error) {
-      Alert.alert('Update failed', error instanceof Error ? error.message : 'Try again.');
+      Alert.alert(t('profile.updateFailed'), error instanceof Error ? error.message : t('profile.tryAgain'));
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +87,7 @@ export function ProfileScreen() {
 
   const handlePasswordChange = async () => {
     if (!password.trim()) {
-      Alert.alert('Missing info', 'Enter a new password.');
+      Alert.alert(t('profile.missingInfoTitle'), t('profile.enterPassword'));
       return;
     }
     setIsLoading(true);
@@ -93,12 +95,16 @@ export function ProfileScreen() {
       const { error } = await supabase.auth.updateUser({ password: password.trim() });
       if (error) throw error;
       setPassword('');
-      Alert.alert('Updated', 'Password changed successfully.');
+      Alert.alert(t('profile.updatedTitle'), t('profile.passwordUpdated'));
     } catch (error) {
-      Alert.alert('Update failed', error instanceof Error ? error.message : 'Try again.');
+      Alert.alert(t('profile.updateFailed'), error instanceof Error ? error.message : t('profile.tryAgain'));
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleLanguageChange = (next: AppLanguage) => {
+    setLanguage(next);
   };
 
   return (
@@ -109,8 +115,8 @@ export function ProfileScreen() {
         <View style={{ position: 'absolute', top: 120, left: -15, width: 40, height: 40, borderRadius: 20, backgroundColor: theme.colors.pinkLight, opacity: 0.4 }} />
 
         <View style={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 20 }}>
-          <Text style={{ color: theme.colors.text, fontSize: 28, fontWeight: '700' }}>Profile 👤</Text>
-          <Text style={{ color: theme.colors.textSecondary, fontSize: 16, marginTop: 8 }}>Manage your family details.</Text>
+          <Text style={{ color: theme.colors.text, fontSize: 28, fontWeight: '700' }}>{t('profile.title')} 👤</Text>
+          <Text style={{ color: theme.colors.textSecondary, fontSize: 16, marginTop: 8 }}>{t('profile.subtitle')}</Text>
         </View>
 
         {/* User Info Card */}
@@ -134,7 +140,7 @@ export function ProfileScreen() {
             }}>
               <Text style={{ fontSize: 36 }}>👤</Text>
             </View>
-            <Text style={{ color: theme.colors.text, fontSize: 22, fontWeight: '700' }}>{profile?.name ?? 'User'}</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 22, fontWeight: '700' }}>{profile?.name ?? t('profile.userFallback')}</Text>
             <View style={{ 
               backgroundColor: theme.colors.primary, 
               borderRadius: 12, 
@@ -142,10 +148,10 @@ export function ProfileScreen() {
               paddingVertical: 4,
               marginTop: 8
             }}>
-              <Text style={{ color: theme.colors.card, fontSize: 12, fontWeight: '600' }}>{profile?.role ?? 'Member'}</Text>
+              <Text style={{ color: theme.colors.card, fontSize: 12, fontWeight: '600' }}>{profile?.role ?? t('profile.memberFallback')}</Text>
             </View>
             <Text style={{ color: theme.colors.text, fontSize: 36, fontWeight: '800', marginTop: 16 }}>{getProfilePoints(profile)}</Text>
-            <Text style={{ color: theme.colors.textSecondary, fontSize: 14 }}>Total Points</Text>
+            <Text style={{ color: theme.colors.textSecondary, fontSize: 14 }}>{t('profile.totalPoints')}</Text>
           </View>
         </View>
 
@@ -158,10 +164,10 @@ export function ProfileScreen() {
             borderWidth: 1,
             borderColor: theme.colors.border
           }}>
-            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600' }}>Family</Text>
-            <Text style={{ color: theme.colors.textSecondary, fontSize: 16, marginTop: 8 }}>{family?.name ?? 'No family yet'}</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600' }}>{t('profile.family')}</Text>
+            <Text style={{ color: theme.colors.textSecondary, fontSize: 16, marginTop: 8 }}>{family?.name ?? t('profile.noFamily')}</Text>
             
-            <Text style={{ color: theme.colors.textMuted, fontSize: 13, marginTop: 16 }}>Invite code</Text>
+            <Text style={{ color: theme.colors.textMuted, fontSize: 13, marginTop: 16 }}>{t('profile.inviteCode')}</Text>
             <View style={{ 
               backgroundColor: theme.colors.inputBg, 
               borderRadius: 16, 
@@ -175,7 +181,7 @@ export function ProfileScreen() {
               borderColor: theme.colors.border
             }}>
               <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 16 }}>
-                {isLoading ? 'Loading...' : inviteCode ?? 'Not available'}
+                {isLoading ? t('profile.loading') : inviteCode ?? t('profile.notAvailable')}
               </Text>
               <TouchableOpacity onPress={handleCopy} disabled={!inviteCode}>
                 <Copy size={20} color={inviteCode ? theme.colors.primary : theme.colors.textMuted} />
@@ -193,7 +199,7 @@ export function ProfileScreen() {
             borderWidth: 1,
             borderColor: theme.colors.border
           }}>
-            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600' }}>Settings</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600' }}>{t('profile.settings')}</Text>
             
             <View style={{ 
               backgroundColor: theme.colors.inputBg, 
@@ -206,7 +212,7 @@ export function ProfileScreen() {
             }}>
               <TextInput
                 style={{ fontSize: 16, color: theme.colors.text }}
-                placeholder="Username"
+                placeholder={t('profile.usernamePlaceholder')}
                 placeholderTextColor={theme.colors.textSecondary}
                 value={username}
                 onChangeText={setUsername}
@@ -226,7 +232,7 @@ export function ProfileScreen() {
               {isLoading ? (
                 <ActivityIndicator color={theme.colors.card} />
               ) : (
-                <Text style={{ color: theme.colors.card, fontWeight: '600', fontSize: 16 }}>Update username</Text>
+                <Text style={{ color: theme.colors.card, fontWeight: '600', fontSize: 16 }}>{t('profile.updateUsername')}</Text>
               )}
             </TouchableOpacity>
 
@@ -241,7 +247,7 @@ export function ProfileScreen() {
             }}>
               <TextInput
                 style={{ fontSize: 16, color: theme.colors.text }}
-                placeholder="New password"
+                placeholder={t('profile.newPasswordPlaceholder')}
                 placeholderTextColor={theme.colors.textSecondary}
                 value={password}
                 onChangeText={setPassword}
@@ -262,9 +268,34 @@ export function ProfileScreen() {
               {isLoading ? (
                 <ActivityIndicator color={theme.colors.text} />
               ) : (
-                <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 16 }}>Change password</Text>
+                <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 16 }}>{t('profile.changePassword')}</Text>
               )}
             </TouchableOpacity>
+
+            <Text style={{ color: theme.colors.textMuted, fontSize: 13, marginTop: 20 }}>{t('profile.language')}</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 }}>
+              {languageOptions.map((option) => {
+                const isActive = language === option.code;
+                return (
+                  <TouchableOpacity
+                    key={option.code}
+                    style={{
+                      backgroundColor: isActive ? theme.colors.primary : theme.colors.inputBg,
+                      borderRadius: 14,
+                      paddingHorizontal: 12,
+                      paddingVertical: 10,
+                      borderWidth: 1,
+                      borderColor: isActive ? theme.colors.primary : theme.colors.border,
+                    }}
+                    onPress={() => handleLanguageChange(option.code)}
+                  >
+                    <Text style={{ color: isActive ? theme.colors.card : theme.colors.text, fontWeight: '600', fontSize: 13 }}>
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
         </View>
 
@@ -277,7 +308,7 @@ export function ProfileScreen() {
             borderWidth: 1,
             borderColor: theme.colors.border
           }}>
-            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600' }}>Members</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600' }}>{t('profile.members')}</Text>
             <View style={{ marginTop: 16, gap: 12 }}>
               {familyMembers.map((member, index) => {
                 const colors = [theme.colors.greenLight, theme.colors.pinkLight, theme.colors.orangeLight, theme.colors.primaryLight];
@@ -312,7 +343,7 @@ export function ProfileScreen() {
                 );
               })}
               {familyMembers.length === 0 && (
-                <Text style={{ color: theme.colors.textSecondary, fontSize: 14 }}>No members yet.</Text>
+                <Text style={{ color: theme.colors.textSecondary, fontSize: 14 }}>{t('profile.noMembers')}</Text>
               )}
             </View>
           </View>
@@ -334,7 +365,7 @@ export function ProfileScreen() {
             onPress={toggleTheme}
           >
             <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 16 }}>
-              Theme: {themeName === 'light' ? 'Light' : themeName === 'dark' ? 'Dark' : 'Colorful'} 🌈
+              {t('profile.theme')}: {themeName === 'light' ? t('profile.themeLight') : themeName === 'dark' ? t('profile.themeDark') : t('profile.themeColorful')} 🌈
             </Text>
           </TouchableOpacity>
         </View>
@@ -353,7 +384,7 @@ export function ProfileScreen() {
             onPress={handleSignOut}
           >
             <LogOut size={20} color={theme.colors.card} />
-            <Text style={{ color: theme.colors.card, fontWeight: '600', fontSize: 16, marginLeft: 8 }}>Sign out</Text>
+            <Text style={{ color: theme.colors.card, fontWeight: '600', fontSize: 16, marginLeft: 8 }}>{t('profile.signOut')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

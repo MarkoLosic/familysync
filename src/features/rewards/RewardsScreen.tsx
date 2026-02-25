@@ -15,6 +15,7 @@ import { getProfilePoints } from '@/utils/profile';
 import { hapticError, hapticSuccess } from '@/utils/haptics';
 import type { Reward } from '@/types';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 
 // Reward card colors
 const REWARD_COLORS = [
@@ -58,6 +59,7 @@ const AccentCircles = ({ theme }: { theme: any }) => (
 export function RewardsScreen() {
   const { family, profile } = useAuthStore();
   const { theme } = useTheme();
+  const { t } = useI18n();
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [title, setTitle] = useState('');
   const [cost, setCost] = useState('50');
@@ -81,7 +83,7 @@ export function RewardsScreen() {
   const handleCreate = async () => {
     if (!family?.id || !profile) return;
     if (!title.trim()) {
-      Alert.alert('Missing info', 'Enter reward title.');
+      Alert.alert(t('common.missingInfo'), t('rewards.enterRewardTitle'));
       return;
     }
 
@@ -99,7 +101,7 @@ export function RewardsScreen() {
       void hapticSuccess();
     } catch (error) {
       void hapticError();
-      Alert.alert('Create failed', error instanceof Error ? error.message : 'Try again.');
+      Alert.alert(t('common.createFailed'), error instanceof Error ? error.message : t('common.tryAgain'));
     } finally {
       setIsLoading(false);
     }
@@ -111,10 +113,10 @@ export function RewardsScreen() {
       setIsLoading(true);
       await claimReward(reward, profile);
       void hapticSuccess();
-      Alert.alert('🎉 Claim sent!', 'Parent approval pending.');
+      Alert.alert(t('rewards.claimSentTitle'), t('rewards.parentApprovalPending'));
     } catch (error) {
       void hapticError();
-      Alert.alert('Claim failed', error instanceof Error ? error.message : 'Try again.');
+      Alert.alert(t('rewards.claimFailed'), error instanceof Error ? error.message : t('common.tryAgain'));
     } finally {
       setIsLoading(false);
     }
@@ -145,9 +147,9 @@ export function RewardsScreen() {
                 <Gift size={24} color="#FFFFFF" />
               </View>
               <View>
-                <Text style={{ fontSize: 28, fontWeight: 'bold', color: theme.colors.text }}>Rewards</Text>
+                <Text style={{ fontSize: 28, fontWeight: 'bold', color: theme.colors.text }}>{t('rewards.title')}</Text>
                 <Text style={{ fontSize: 14, color: theme.colors.textSecondary, marginTop: 2 }}>
-                  Earn and redeem 🎁
+                  {t('rewards.subtitle')} 🎁
                 </Text>
               </View>
             </View>
@@ -176,7 +178,7 @@ export function RewardsScreen() {
             <Text style={{ fontSize: 32, fontWeight: 'bold', color: theme.colors.primary, marginLeft: 12 }}>
               {points}
             </Text>
-            <Text style={{ fontSize: 16, color: theme.colors.textSecondary, marginLeft: 8 }}>points</Text>
+            <Text style={{ fontSize: 16, color: theme.colors.textSecondary, marginLeft: 8 }}>{t('common.pointsLower')}</Text>
           </View>
         </View>
 
@@ -193,7 +195,7 @@ export function RewardsScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
               <Sparkles size={20} color={theme.colors.primary} />
               <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginLeft: 8 }}>
-                New Reward
+                {t('rewards.newReward')}
               </Text>
             </View>
             
@@ -208,7 +210,7 @@ export function RewardsScreen() {
                 borderWidth: 1,
                 borderColor: theme.colors.border,
               }}
-              placeholder="Reward title (e.g., Ice cream trip)"
+              placeholder={t('rewards.rewardTitlePlaceholder')}
               placeholderTextColor={theme.colors.textMuted}
               value={title}
               onChangeText={setTitle}
@@ -235,13 +237,13 @@ export function RewardsScreen() {
                   color: theme.colors.text,
                   marginLeft: 10,
                 }}
-                placeholder="Points cost"
+                placeholder={t('rewards.pointsCost')}
                 placeholderTextColor={theme.colors.textMuted}
                 value={cost}
                 onChangeText={setCost}
                 keyboardType="numeric"
               />
-              <Text style={{ color: theme.colors.textMuted }}>pts</Text>
+              <Text style={{ color: theme.colors.textMuted }}>{t('common.pts')}</Text>
             </View>
             
             <TouchableOpacity
@@ -259,7 +261,7 @@ export function RewardsScreen() {
               {isLoading ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>Add Reward</Text>
+                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>{t('rewards.addReward')}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -278,14 +280,14 @@ export function RewardsScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
               <ShoppingBag size={20} color={theme.colors.primary} />
               <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginLeft: 8 }}>
-                Reward Shop
+                {t('rewards.rewardShop')}
               </Text>
             </View>
             
             {rewards.length === 0 ? (
               <View style={{ alignItems: 'center', paddingVertical: 24 }}>
                 <Text style={{ fontSize: 40, marginBottom: 12 }}>🎁</Text>
-                <Text style={{ fontSize: 14, color: theme.colors.textMuted }}>No rewards yet. Add your first one!</Text>
+                <Text style={{ fontSize: 14, color: theme.colors.textMuted }}>{t('rewards.noRewardsYet')}</Text>
               </View>
             ) : (
               <View style={{ gap: 12 }}>
@@ -311,7 +313,7 @@ export function RewardsScreen() {
                           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
                             <Star size={14} color={theme.colors.primary} fill={theme.colors.primary} />
                             <Text style={{ fontSize: 14, fontWeight: '600', color: theme.colors.primary, marginLeft: 4 }}>
-                              {reward.cost} pts
+                              {reward.cost} {t('common.pts')}
                             </Text>
                           </View>
                         </View>
@@ -330,7 +332,7 @@ export function RewardsScreen() {
                         >
                           <Gift size={16} color="#FFFFFF" />
                           <Text style={{ color: '#FFFFFF', fontWeight: '600', marginLeft: 6 }}>
-                            Claim
+                            {t('rewards.claim')}
                           </Text>
                         </TouchableOpacity>
                       </View>

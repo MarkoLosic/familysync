@@ -15,6 +15,7 @@ import { getProfileId } from '@/utils/profile';
 import { hapticError, hapticImpactLight, hapticSuccess } from '@/utils/haptics';
 import type { Task } from '@/types';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 
 // Status colors function
 const getStatusColors = (theme: any) => ({
@@ -24,24 +25,24 @@ const getStatusColors = (theme: any) => ({
   postponed: { bg: theme.colors.error + '20', text: theme.colors.error, accent: theme.colors.error },
 });
 
-const getErrorMessage = (error: unknown) => {
+const getErrorMessage = (error: unknown, fallback: string) => {
   if (error instanceof Error) return error.message;
   if (typeof error === 'object' && error && 'message' in error) {
-    return String((error as { message?: unknown }).message ?? 'Try again.');
+    return String((error as { message?: unknown }).message ?? fallback);
   }
-  return 'Try again.';
+  return fallback;
 };
 
-const statusLabel = (status: Task['status']) => {
+const statusLabel = (status: Task['status'], t: (key: string) => string) => {
   switch (status) {
     case 'pending':
-      return '○ To do';
+      return `○ ${t('common.toDo')}`;
     case 'waiting_approval':
-      return '⏳ Awaiting approval';
+      return `⏳ ${t('tasks.awaitingApproval')}`;
     case 'completed':
-      return '✓ Completed';
+      return `✓ ${t('tasks.completed')}`;
     case 'postponed':
-      return '⏸ Postponed';
+      return `⏸ ${t('tasks.postponed')}`;
     default:
       return status;
   }
@@ -80,6 +81,7 @@ const AccentCircles = ({ theme }: { theme: any }) => (
 export function TasksScreen() {
   const { family, profile } = useAuthStore();
   const { theme } = useTheme();
+  const { t } = useI18n();
   const statusColors = getStatusColors(theme);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [title, setTitle] = useState('');
@@ -106,11 +108,11 @@ export function TasksScreen() {
     if (!family?.id || !profile) return;
     const profileId = getProfileId(profile);
     if (!profileId) {
-      Alert.alert('Create failed', 'Missing profile id.');
+      Alert.alert(t('common.createFailed'), t('common.missingProfileId'));
       return;
     }
     if (!title.trim()) {
-      Alert.alert('Missing info', 'Enter a task title.');
+      Alert.alert(t('common.missingInfo'), t('tasks.enterTaskTitle'));
       return;
     }
 
@@ -134,9 +136,9 @@ export function TasksScreen() {
           ? error.message
           : typeof error === 'object' && error && 'message' in error
             ? String((error as { message?: string }).message)
-            : 'Try again.';
+            : t('common.tryAgain');
       void hapticError();
-      Alert.alert('Create failed', message);
+      Alert.alert(t('common.createFailed'), message);
     } finally {
       setIsLoading(false);
     }
@@ -158,7 +160,7 @@ export function TasksScreen() {
       void hapticImpactLight();
     } catch (error) {
       void hapticError();
-      Alert.alert('Update failed', getErrorMessage(error));
+      Alert.alert(t('common.updateFailed'), getErrorMessage(error, t('common.tryAgain')));
     } finally {
       setIsLoading(false);
     }
@@ -186,9 +188,9 @@ export function TasksScreen() {
               <ListTodo size={24} color={theme.colors.card} />
             </View>
             <View>
-              <Text style={{ fontSize: 28, fontWeight: 'bold', color: theme.colors.text }}>Tasks</Text>
+              <Text style={{ fontSize: 28, fontWeight: 'bold', color: theme.colors.text }}>{t('tasks.title')}</Text>
               <Text style={{ fontSize: 14, color: theme.colors.textSecondary, marginTop: 2 }}>
-                Assign and approve tasks ✅
+                {t('tasks.subtitle')} ✅
               </Text>
             </View>
           </View>
@@ -207,7 +209,7 @@ export function TasksScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
               <Plus size={20} color={theme.colors.success} />
               <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginLeft: 8 }}>
-                New Task
+                {t('tasks.newTask')}
               </Text>
             </View>
             
@@ -222,7 +224,7 @@ export function TasksScreen() {
                 borderWidth: 1,
                 borderColor: theme.colors.border,
               }}
-              placeholder="Task title"
+              placeholder={t('tasks.taskTitle')}
               placeholderTextColor={theme.colors.textSecondary}
               value={title}
               onChangeText={setTitle}
@@ -240,7 +242,7 @@ export function TasksScreen() {
                 borderColor: theme.colors.border,
                 marginTop: 12,
               }}
-              placeholder="Description (optional)"
+              placeholder={t('common.descriptionOptional')}
               placeholderTextColor={theme.colors.textSecondary}
               value={description}
               onChangeText={setDescription}
@@ -267,13 +269,13 @@ export function TasksScreen() {
                   color: theme.colors.text,
                   marginLeft: 10,
                 }}
-                placeholder="Points"
+                placeholder={t('common.points')}
                 placeholderTextColor={theme.colors.textSecondary}
                 value={points}
                 onChangeText={setPoints}
                 keyboardType="numeric"
               />
-              <Text style={{ color: theme.colors.textSecondary }}>pts</Text>
+              <Text style={{ color: theme.colors.textSecondary }}>{t('common.pts')}</Text>
             </View>
             
             <TouchableOpacity
@@ -290,7 +292,7 @@ export function TasksScreen() {
               {isLoading ? (
                 <ActivityIndicator color={theme.colors.card} />
               ) : (
-                <Text style={{ color: theme.colors.card, fontWeight: '600', fontSize: 16 }}>Add Task</Text>
+                <Text style={{ color: theme.colors.card, fontWeight: '600', fontSize: 16 }}>{t('tasks.addTask')}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -309,14 +311,14 @@ export function TasksScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
               <CheckCircle2 size={20} color={theme.colors.primary} />
               <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginLeft: 8 }}>
-                Task List
+                {t('tasks.taskList')}
               </Text>
             </View>
             
             {tasks.length === 0 ? (
               <View style={{ alignItems: 'center', paddingVertical: 24 }}>
                 <Text style={{ fontSize: 40, marginBottom: 12 }}>📋</Text>
-                <Text style={{ fontSize: 14, color: theme.colors.textSecondary }}>No tasks yet. Add your first one!</Text>
+                <Text style={{ fontSize: 14, color: theme.colors.textSecondary }}>{t('tasks.noTasksYet')}</Text>
               </View>
             ) : (
               <View style={{ gap: 12 }}>
@@ -339,7 +341,7 @@ export function TasksScreen() {
                             {task.title}
                           </Text>
                           <Text style={{ fontSize: 12, color: statusColor.text, marginTop: 4 }}>
-                            {statusLabel(task.status)}
+                            {statusLabel(task.status, t)}
                           </Text>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -365,7 +367,7 @@ export function TasksScreen() {
                           onPress={() => handleStatusUpdate(task, 'completed')}
                           disabled={isLoading}
                         >
-                          <Text style={{ color: theme.colors.success, fontWeight: '600' }}>✓ Done</Text>
+                          <Text style={{ color: theme.colors.success, fontWeight: '600' }}>✓ {t('common.done')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={{
@@ -380,7 +382,7 @@ export function TasksScreen() {
                           onPress={() => handleStatusUpdate(task, 'postponed')}
                           disabled={isLoading}
                         >
-                          <Text style={{ color: theme.colors.warning, fontWeight: '600' }}>⏸ Later</Text>
+                          <Text style={{ color: theme.colors.warning, fontWeight: '600' }}>⏸ {t('common.later')}</Text>
                         </TouchableOpacity>
                       </View>
                     </View>

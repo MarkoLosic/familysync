@@ -7,6 +7,7 @@ import { ShoppingScreen } from '@/features/shopping';
 import { ProfileScreen } from '@/features/profile';
 import { LocationsScreen } from '@/features/locations';
 import { PlannerScreen } from '@/features/planner';
+import { useI18n } from '@/i18n';
 
 export type MainTabParamList = {
   Home: undefined;
@@ -25,6 +26,7 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
 function MainTabs() {
+  const { t } = useI18n();
   return (
     <Tab.Navigator
       screenOptions={{
@@ -49,6 +51,7 @@ function MainTabs() {
         name="Home"
         component={HomeScreen}
         options={{
+          tabBarLabel: t('tabs.home'),
           tabBarIcon: ({ color, size }) => (
             <Home size={size} color={color} strokeWidth={2.4} />
           ),
@@ -58,6 +61,7 @@ function MainTabs() {
         name="Planner"
         component={PlannerScreen}
         options={{
+          tabBarLabel: t('tabs.planner'),
           tabBarIcon: ({ color, size }) => (
             <Calendar size={size} color={color} strokeWidth={2.4} />
           ),
@@ -67,7 +71,7 @@ function MainTabs() {
         name="Locations"
         component={LocationsScreen}
         options={{
-          tabBarLabel: 'Map',
+          tabBarLabel: t('tabs.map'),
           tabBarIcon: ({ color, size }) => (
             <MapPin size={size} color={color} strokeWidth={2.4} />
           ),
@@ -77,6 +81,7 @@ function MainTabs() {
         name="Shopping"
         component={ShoppingScreen}
         options={{
+          tabBarLabel: t('tabs.shopping'),
           tabBarIcon: ({ color, size }) => (
             <ShoppingCart size={size} color={color} strokeWidth={2.4} />
           ),
@@ -86,6 +91,7 @@ function MainTabs() {
         name="Profile"
         component={ProfileScreen}
         options={{
+          tabBarLabel: t('tabs.profile'),
           tabBarIcon: ({ color, size }) => (
             <User size={size} color={color} strokeWidth={2.4} />
           ),

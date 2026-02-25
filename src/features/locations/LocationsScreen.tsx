@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store';
 import { fetchFamilyLocations, upsertLocation } from '@/services/locations';
 import type { FamilyLocation, LocationStatus } from '@/types';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 
 const statusIcon = (status: LocationStatus, theme: any) => {
   switch (status) {
@@ -24,6 +25,7 @@ const statusIcon = (status: LocationStatus, theme: any) => {
 export function LocationsScreen() {
   const { family, profile, familyMembers, session } = useAuthStore();
   const { theme } = useTheme();
+  const { t } = useI18n();
   const [locations, setLocations] = useState<FamilyLocation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<LocationStatus>('away');
@@ -38,7 +40,7 @@ export function LocationsScreen() {
       const data = await fetchFamilyLocations(family.id);
       setLocations(data);
     } catch (error) {
-      Alert.alert('Failed to load', error instanceof Error ? error.message : 'Try again.');
+      Alert.alert(t('locations.failedToLoad'), error instanceof Error ? error.message : t('common.tryAgain'));
     } finally {
       setIsLoading(false);
     }
@@ -128,7 +130,7 @@ export function LocationsScreen() {
 
   const handleStatusUpdate = async (status: LocationStatus) => {
     if (!family?.id || !locationUserId) {
-      Alert.alert('Update failed', 'Missing user id. Please refresh and try again.');
+      Alert.alert(t('common.updateFailed'), t('locations.missingUserId'));
       return;
     }
     try {
@@ -143,7 +145,7 @@ export function LocationsScreen() {
       });
       setLocations((prev) => [updated, ...prev.filter((item) => item.id !== updated.id)]);
     } catch (error) {
-      Alert.alert('Update failed', error instanceof Error ? error.message : 'Try again.');
+      Alert.alert(t('common.updateFailed'), error instanceof Error ? error.message : t('common.tryAgain'));
     } finally {
       setIsLoading(false);
     }
@@ -182,8 +184,8 @@ export function LocationsScreen() {
         <View style={{ position: 'absolute', top: 130, left: 20, width: 35, height: 35, borderRadius: 18, backgroundColor: theme.colors.primary, opacity: 0.4 }} />
 
         <View style={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 20 }}>
-          <Text style={{ color: theme.colors.text, fontSize: 28, fontWeight: '700' }}>Family Map 📍</Text>
-          <Text style={{ color: theme.colors.textSecondary, fontSize: 16, marginTop: 8 }}>Track where everyone is right now.</Text>
+          <Text style={{ color: theme.colors.text, fontSize: 28, fontWeight: '700' }}>{t('locations.title')} 📍</Text>
+          <Text style={{ color: theme.colors.textSecondary, fontSize: 16, marginTop: 8 }}>{t('locations.subtitle')}</Text>
         </View>
 
         <View style={{ paddingHorizontal: 24 }}>
@@ -194,7 +196,7 @@ export function LocationsScreen() {
             borderWidth: 1,
             borderColor: theme.colors.border
           }}>
-            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600', marginBottom: 16 }}>Live map</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600', marginBottom: 16 }}>{t('locations.liveMap')}</Text>
             <View style={{ borderRadius: 16, overflow: 'hidden', height: 220 }}>
               <MapView
                 style={{ flex: 1 }}
@@ -210,7 +212,7 @@ export function LocationsScreen() {
                     title={
                       familyMembers.find(
                         (member) => member.id === item.user_id || member.user_id === item.user_id
-                      )?.name ?? 'Member'
+                      )?.name ?? t('profile.memberFallback')
                     }
                     description={item.status}
                   />
@@ -219,11 +221,11 @@ export function LocationsScreen() {
             </View>
             {markerLocations.length === 0 && (
               <Text style={{ color: theme.colors.textSecondary, fontSize: 13, marginTop: 12 }}>
-                No GPS data yet. Status updates will appear here once lat/lng is provided.
+                {t('locations.noGpsYet')}
               </Text>
             )}
 
-            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600', marginTop: 24 }}>Update your status</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600', marginTop: 24 }}>{t('locations.updateStatus')}</Text>
             {currentCoords && (
               <Text style={{ color: theme.colors.textSecondary, fontSize: 12, marginTop: 8 }}>
                 GPS: {currentCoords.lat.toFixed(4)}, {currentCoords.lng.toFixed(4)}
@@ -261,7 +263,7 @@ export function LocationsScreen() {
                       marginLeft: 8, 
                       textTransform: 'capitalize' 
                     }}>
-                      {status}
+                      {t(`locations.status.${status}`)}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -278,7 +280,7 @@ export function LocationsScreen() {
             borderWidth: 1,
             borderColor: theme.colors.border
           }}>
-            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600' }}>Live status</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600' }}>{t('locations.liveStatus')}</Text>
             {isLoading && <ActivityIndicator color={theme.colors.primary} style={{ marginTop: 16 }} />}
             <View style={{ marginTop: 16, gap: 12 }}>
               {familyMembers.map((member, index) => {
@@ -311,7 +313,9 @@ export function LocationsScreen() {
                       </View>
                       <View style={{ marginLeft: 12 }}>
                         <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 16 }}>{member.name}</Text>
-                        <Text style={{ color: theme.colors.textSecondary, fontSize: 12, marginTop: 2, textTransform: 'capitalize' }}>{status}</Text>
+                        <Text style={{ color: theme.colors.textSecondary, fontSize: 12, marginTop: 2, textTransform: 'capitalize' }}>
+                          {t(`locations.status.${status}`)}
+                        </Text>
                       </View>
                     </View>
                     <MapPin size={20} color={theme.colors.primary} />
@@ -319,7 +323,7 @@ export function LocationsScreen() {
                 );
               })}
               {familyMembers.length === 0 && (
-                <Text style={{ color: theme.colors.textMuted, fontSize: 14 }}>No members yet.</Text>
+                <Text style={{ color: theme.colors.textMuted, fontSize: 14 }}>{t('profile.noMembers')}</Text>
               )}
             </View>
           </View>

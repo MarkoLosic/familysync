@@ -17,6 +17,7 @@ import { getProfileId } from '@/utils/profile';
 import { hapticError, hapticSuccess } from '@/utils/haptics';
 import type { CalendarEvent } from '@/types';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -55,6 +56,7 @@ const AccentCircles = ({ theme }: { theme: any }) => (
 export function CalendarScreen() {
   const { family, profile } = useAuthStore();
   const { theme } = useTheme();
+  const { t } = useI18n();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [title, setTitle] = useState('');
@@ -91,11 +93,11 @@ export function CalendarScreen() {
     if (!family?.id || !profile) return;
     const profileId = getProfileId(profile);
     if (!profileId) {
-      Alert.alert('Create failed', 'Missing profile id.');
+      Alert.alert(t('common.createFailed'), t('common.missingProfileId'));
       return;
     }
     if (!title.trim()) {
-      Alert.alert('Missing info', 'Enter event title.');
+      Alert.alert(t('common.missingInfo'), t('calendar.enterEventTitle'));
       return;
     }
 
@@ -119,8 +121,8 @@ export function CalendarScreen() {
           ? error.message
           : typeof error === 'object' && error && 'message' in error
             ? String((error as { message?: string }).message)
-            : 'Try again.';
-      Alert.alert('Create failed', message);
+            : t('common.tryAgain');
+      Alert.alert(t('common.createFailed'), message);
     } finally {
       setIsLoading(false);
     }
@@ -148,9 +150,9 @@ export function CalendarScreen() {
               <CalendarDays size={24} color={theme.colors.card} />
             </View>
             <View>
-              <Text style={{ fontSize: 28, fontWeight: 'bold', color: theme.colors.text }}>Calendar</Text>
+              <Text style={{ fontSize: 28, fontWeight: 'bold', color: theme.colors.text }}>{t('calendar.title')}</Text>
               <Text style={{ fontSize: 14, color: theme.colors.textSecondary, marginTop: 2 }}>
-                Plan your family moments 📅
+                {t('calendar.subtitle')} 📅
               </Text>
             </View>
           </View>
@@ -204,7 +206,7 @@ export function CalendarScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
               <Plus size={20} color={theme.colors.primary} />
               <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginLeft: 8 }}>
-                New Event
+                {t('calendar.newEvent')}
               </Text>
             </View>
             <TextInput
@@ -218,7 +220,7 @@ export function CalendarScreen() {
                 borderWidth: 1,
                 borderColor: theme.colors.border,
               }}
-              placeholder="Event title"
+              placeholder={t('calendar.eventTitle')}
               placeholderTextColor={theme.colors.textSecondary}
               value={title}
               onChangeText={setTitle}
@@ -237,7 +239,7 @@ export function CalendarScreen() {
               {isLoading ? (
                 <ActivityIndicator color={theme.colors.card} />
               ) : (
-                <Text style={{ color: theme.colors.card, fontWeight: '600', fontSize: 16 }}>Add Event</Text>
+                <Text style={{ color: theme.colors.card, fontWeight: '600', fontSize: 16 }}>{t('calendar.addEvent')}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -256,14 +258,14 @@ export function CalendarScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
               <Clock size={20} color={theme.colors.primary} />
               <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginLeft: 8 }}>
-                Events on {selectedDate}
+                {t('calendar.eventsOn')} {selectedDate}
               </Text>
             </View>
             
             {dayEvents.length === 0 ? (
               <View style={{ alignItems: 'center', paddingVertical: 24 }}>
                 <Text style={{ fontSize: 40, marginBottom: 12 }}>📭</Text>
-                <Text style={{ fontSize: 14, color: theme.colors.textSecondary }}>No events scheduled</Text>
+                <Text style={{ fontSize: 14, color: theme.colors.textSecondary }}>{t('calendar.noEventsScheduled')}</Text>
               </View>
             ) : (
               <View style={{ gap: 12 }}>
@@ -284,7 +286,7 @@ export function CalendarScreen() {
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
                       <Clock size={14} color={theme.colors.textSecondary} />
                       <Text style={{ fontSize: 13, color: theme.colors.textSecondary, marginLeft: 6 }}>
-                        {event.event_time ?? 'All day'}
+                        {event.event_time ?? t('calendar.allDay')}
                       </Text>
                     </View>
                   </View>

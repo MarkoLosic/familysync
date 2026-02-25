@@ -4,10 +4,12 @@ import { Calendar as CalendarIcon, CheckSquare } from 'lucide-react-native';
 import { CalendarScreen } from '@/features/calendar';
 import { TasksScreen } from '@/features/tasks';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 
 export function PlannerScreen() {
   const [activeTab, setActiveTab] = useState<'calendar' | 'tasks'>('calendar');
   const { theme } = useTheme();
+  const { t } = useI18n();
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
@@ -16,8 +18,8 @@ export function PlannerScreen() {
       <View style={{ position: 'absolute', top: 100, left: -10, width: 50, height: 50, borderRadius: 25, backgroundColor: theme.colors.primary, opacity: 0.3 }} />
 
       <View style={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16 }}>
-        <Text style={{ color: theme.colors.text, fontSize: 28, fontWeight: '700' }}>Planner 📅</Text>
-        <Text style={{ color: theme.colors.textSecondary, fontSize: 16, marginTop: 8 }}>Calendar and tasks in one place.</Text>
+        <Text style={{ color: theme.colors.text, fontSize: 28, fontWeight: '700' }}>{t('planner.title')} 📅</Text>
+        <Text style={{ color: theme.colors.textSecondary, fontSize: 16, marginTop: 8 }}>{t('planner.subtitle')}</Text>
       </View>
 
       <View style={{ paddingHorizontal: 24 }}>
@@ -49,7 +51,7 @@ export function PlannerScreen() {
                 color: activeTab === 'calendar' ? '#FFFFFF' : theme.colors.textSecondary,
               }}
             >
-              Calendar
+              {t('planner.calendarTab')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -72,7 +74,7 @@ export function PlannerScreen() {
                 color: activeTab === 'tasks' ? '#FFFFFF' : theme.colors.textSecondary,
               }}
             >
-              Tasks
+              {t('planner.tasksTab')}
             </Text>
           </TouchableOpacity>
         </View>

@@ -14,6 +14,7 @@ import { createFridgeNote, deleteFridgeNote, fetchFridgeNotes } from '@/services
 import type { FridgeNote } from '@/types';
 import { hapticError, hapticImpactLight, hapticSuccess } from '@/utils/haptics';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 
 // Note colors for variety
 const NOTE_COLORS = [
@@ -57,6 +58,7 @@ const AccentCircles = ({ theme }: { theme: any }) => (
 export function FridgeScreen() {
   const { family, profile } = useAuthStore();
   const { theme } = useTheme();
+  const { t } = useI18n();
   const [notes, setNotes] = useState<FridgeNote[]>([]);
   const [content, setContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -79,7 +81,7 @@ export function FridgeScreen() {
   const handleCreate = async () => {
     if (!family?.id || !profile) return;
     if (!content.trim()) {
-      Alert.alert('Missing info', 'Write a quick note first.');
+      Alert.alert(t('common.missingInfo'), t('fridge.writeQuickNote'));
       return;
     }
 
@@ -95,7 +97,7 @@ export function FridgeScreen() {
       void hapticSuccess();
     } catch (error) {
       void hapticError();
-      Alert.alert('Create failed', error instanceof Error ? error.message : 'Try again.');
+      Alert.alert(t('common.createFailed'), error instanceof Error ? error.message : t('common.tryAgain'));
     } finally {
       setIsLoading(false);
     }
@@ -109,7 +111,7 @@ export function FridgeScreen() {
       void hapticImpactLight();
     } catch (error) {
       void hapticError();
-      Alert.alert('Delete failed', error instanceof Error ? error.message : 'Try again.');
+      Alert.alert(t('common.deleteFailed'), error instanceof Error ? error.message : t('common.tryAgain'));
     } finally {
       setIsLoading(false);
     }
@@ -137,9 +139,9 @@ export function FridgeScreen() {
               <StickyNote size={24} color="#FFFFFF" />
             </View>
             <View>
-              <Text style={{ fontSize: 28, fontWeight: 'bold', color: theme.colors.text }}>Fridge</Text>
+              <Text style={{ fontSize: 28, fontWeight: 'bold', color: theme.colors.text }}>{t('fridge.title')}</Text>
               <Text style={{ fontSize: 14, color: theme.colors.textSecondary, marginTop: 2 }}>
-                Quick notes for the family 📝
+                {t('fridge.subtitle')} 📝
               </Text>
             </View>
           </View>
@@ -158,7 +160,7 @@ export function FridgeScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
               <Plus size={20} color={theme.colors.primary} />
               <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginLeft: 8 }}>
-                Pin a Note
+                {t('fridge.pinNote')}
               </Text>
             </View>
             <TextInput
@@ -174,7 +176,7 @@ export function FridgeScreen() {
                 minHeight: 80,
                 textAlignVertical: 'top',
               }}
-              placeholder="Milk expires Friday, call mom, etc."
+              placeholder={t('fridge.notePlaceholder')}
               placeholderTextColor={theme.colors.textMuted}
               value={content}
               onChangeText={setContent}
@@ -195,7 +197,7 @@ export function FridgeScreen() {
               {isLoading ? (
                 <ActivityIndicator color={theme.colors.background} />
               ) : (
-                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>Pin Note 📌</Text>
+                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>{t('fridge.pinNoteCta')} 📌</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -214,14 +216,14 @@ export function FridgeScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
               <NotebookPen size={20} color={theme.colors.primary} />
               <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginLeft: 8 }}>
-                Sticky Wall
+                {t('fridge.stickyWall')}
               </Text>
             </View>
             
             {notes.length === 0 ? (
               <View style={{ alignItems: 'center', paddingVertical: 24 }}>
                 <Text style={{ fontSize: 40, marginBottom: 12 }}>🗒️</Text>
-                <Text style={{ fontSize: 14, color: theme.colors.textMuted }}>No notes yet. Pin your first one!</Text>
+                <Text style={{ fontSize: 14, color: theme.colors.textMuted }}>{t('fridge.noNotesYet')}</Text>
               </View>
             ) : (
               <View style={{ gap: 12 }}>
@@ -261,7 +263,7 @@ export function FridgeScreen() {
                       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12 }}>
                         <StickyNote size={14} color={colorScheme.accent} />
                         <Text style={{ fontSize: 12, color: theme.colors.textSecondary, marginLeft: 6 }}>
-                          Pinned note
+                          {t('fridge.pinnedNote')}
                         </Text>
                       </View>
                     </View>

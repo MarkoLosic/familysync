@@ -14,6 +14,7 @@ import { createReminder, fetchReminders, toggleReminderStatus } from '@/services
 import { hapticError, hapticImpactLight, hapticSuccess } from '@/utils/haptics';
 import type { Reminder } from '@/types';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 
 // Member avatar emojis
 const MEMBER_EMOJIS = ['👨', '👩', '👧', '👦', '👴', '👵', '🧑'];
@@ -51,6 +52,7 @@ const AccentCircles = ({ theme }: { theme: any }) => (
 export function RemindersScreen() {
   const { family, profile, familyMembers } = useAuthStore();
   const { theme } = useTheme();
+  const { t } = useI18n();
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [title, setTitle] = useState('');
   const [note, setNote] = useState('');
@@ -76,7 +78,7 @@ export function RemindersScreen() {
   const handleCreate = async () => {
     if (!family?.id || !profile) return;
     if (!title.trim()) {
-      Alert.alert('Missing info', 'Enter reminder title.');
+      Alert.alert(t('common.missingInfo'), t('reminders.enterReminderTitle'));
       return;
     }
 
@@ -96,7 +98,7 @@ export function RemindersScreen() {
       void hapticSuccess();
     } catch (error) {
       void hapticError();
-      Alert.alert('Create failed', error instanceof Error ? error.message : 'Try again.');
+      Alert.alert(t('common.createFailed'), error instanceof Error ? error.message : t('common.tryAgain'));
     } finally {
       setIsLoading(false);
     }
@@ -110,7 +112,7 @@ export function RemindersScreen() {
       void hapticImpactLight();
     } catch (error) {
       void hapticError();
-      Alert.alert('Update failed', error instanceof Error ? error.message : 'Try again.');
+      Alert.alert(t('common.updateFailed'), error instanceof Error ? error.message : t('common.tryAgain'));
     } finally {
       setIsLoading(false);
     }
@@ -138,9 +140,9 @@ export function RemindersScreen() {
               <Bell size={24} color="#FFFFFF" />
             </View>
             <View>
-              <Text style={{ fontSize: 28, fontWeight: 'bold', color: theme.colors.text }}>Reminders</Text>
+              <Text style={{ fontSize: 28, fontWeight: 'bold', color: theme.colors.text }}>{t('reminders.title')}</Text>
               <Text style={{ fontSize: 14, color: theme.colors.textSecondary, marginTop: 2 }}>
-                Delegate tasks smartly 🔔
+                {t('reminders.subtitle')} 🔔
               </Text>
             </View>
           </View>
@@ -159,7 +161,7 @@ export function RemindersScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
               <Plus size={20} color={theme.colors.primary} />
               <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginLeft: 8 }}>
-                Create Reminder
+                {t('reminders.createReminder')}
               </Text>
             </View>
             
@@ -174,7 +176,7 @@ export function RemindersScreen() {
                 borderWidth: 1,
                 borderColor: theme.colors.border,
               }}
-              placeholder="Reminder title"
+              placeholder={t('reminders.reminderTitle')}
               placeholderTextColor={theme.colors.textMuted}
               value={title}
               onChangeText={setTitle}
@@ -192,7 +194,7 @@ export function RemindersScreen() {
                 borderColor: theme.colors.border,
                 marginTop: 12,
               }}
-              placeholder="Notes (optional)"
+              placeholder={t('common.notesOptional')}
               placeholderTextColor={theme.colors.textMuted}
               value={note}
               onChangeText={setNote}
@@ -202,7 +204,7 @@ export function RemindersScreen() {
             <View style={{ marginTop: 16 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
                 <Users size={16} color={theme.colors.textSecondary} />
-                <Text style={{ fontSize: 14, color: theme.colors.textSecondary, marginLeft: 6 }}>Assign to:</Text>
+                <Text style={{ fontSize: 14, color: theme.colors.textSecondary, marginLeft: 6 }}>{t('reminders.assignTo')}</Text>
               </View>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                 {familyMembers.map((member, index) => (
@@ -227,7 +229,7 @@ export function RemindersScreen() {
                   </TouchableOpacity>
                 ))}
                 {familyMembers.length === 0 && (
-                  <Text style={{ fontSize: 14, color: theme.colors.textMuted }}>No members yet</Text>
+                  <Text style={{ fontSize: 14, color: theme.colors.textMuted }}>{t('profile.noMembers')}</Text>
                 )}
               </View>
             </View>
@@ -247,7 +249,7 @@ export function RemindersScreen() {
               {isLoading ? (
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>Add Reminder</Text>
+                <Text style={{ color: '#FFFFFF', fontWeight: '600', fontSize: 16 }}>{t('reminders.addReminder')}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -266,14 +268,14 @@ export function RemindersScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
               <AlertCircle size={20} color={theme.colors.primary} />
               <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginLeft: 8 }}>
-                Assigned Reminders
+                {t('reminders.assignedReminders')}
               </Text>
             </View>
             
             {reminders.length === 0 ? (
               <View style={{ alignItems: 'center', paddingVertical: 24 }}>
                 <Text style={{ fontSize: 40, marginBottom: 12 }}>🔔</Text>
-                <Text style={{ fontSize: 14, color: theme.colors.textMuted }}>No reminders yet</Text>
+                <Text style={{ fontSize: 14, color: theme.colors.textMuted }}>{t('reminders.noRemindersYet')}</Text>
               </View>
             ) : (
               <View style={{ gap: 12 }}>
@@ -306,11 +308,11 @@ export function RemindersScreen() {
                           </Text>
                           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
                             <Text style={{ fontSize: 12, color: isDone ? theme.colors.textMuted : theme.colors.textSecondary }}>
-                              {isDone ? '✓ Done' : '○ Pending'}
+                              {isDone ? `✓ ${t('common.done')}` : `○ ${t('common.pending')}`}
                             </Text>
                             {reminder.assigned_to && (
                               <Text style={{ fontSize: 12, color: theme.colors.textMuted, marginLeft: 8 }}>
-                                · {assigneeById.get(reminder.assigned_to) ?? 'Assigned'}
+                                · {assigneeById.get(reminder.assigned_to) ?? t('reminders.assigned')}
                               </Text>
                             )}
                           </View>

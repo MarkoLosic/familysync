@@ -18,6 +18,7 @@ import { supabase } from '@/services/supabase';
 import { useAuthStore } from '@/store';
 import type { AuthStackParamList } from '@/navigation/AuthNavigator';
 import { darkTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 
 // Avatar komponenta za 3D stil
 const Avatar = ({ emoji, size = 60, color = darkTheme.colors.primary }: { emoji: string; size?: number; color?: string }) => (
@@ -92,6 +93,7 @@ export function RegisterScreen() {
   const insets = useSafeAreaInsets();
   const bottomInset = Platform.OS === 'ios' ? Math.max(insets.bottom, 16) : 0;
   const theme = darkTheme.colors;
+  const { t } = useI18n();
   const emailRedirectTo =
     Platform.OS === 'web' && typeof window !== 'undefined'
       ? window.location.origin
@@ -99,12 +101,12 @@ export function RegisterScreen() {
 
   const handleRegister = async () => {
     if (!name || !email || !password) {
-      Alert.alert('Missing info', 'Please complete all fields.');
+      Alert.alert(t('common.missingInfo'), t('auth.register.completeAllFields'));
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Password too short', 'Use at least 6 characters.');
+      Alert.alert(t('auth.register.passwordTooShort'), t('auth.register.useAtLeast6Chars'));
       return;
     }
 
@@ -120,18 +122,18 @@ export function RegisterScreen() {
       });
 
       if (error) throw error;
-      if (!data.user) throw new Error('Account created, but user is missing.');
+      if (!data.user) throw new Error(t('auth.register.userMissingAfterSignup'));
 
       await createProfile(data.user.id, name.trim(), email.trim().toLowerCase());
 
       if (!data.session) {
-        Alert.alert('Check your email', 'Confirm your email to finish registration.');
+        Alert.alert(t('auth.register.checkEmail'), t('auth.register.confirmEmailToFinish'));
         return;
       }
 
       await refreshProfileAndFamily();
     } catch (error) {
-      Alert.alert('Registration failed', error instanceof Error ? error.message : 'Try again.');
+      Alert.alert(t('auth.register.registrationFailed'), error instanceof Error ? error.message : t('common.tryAgain'));
     } finally {
       setIsLoading(false);
     }
@@ -171,19 +173,19 @@ export function RegisterScreen() {
               </View>
               
               <Text style={{ fontSize: 32, fontWeight: 'bold', color: theme.text, marginTop: 24, textAlign: 'center', lineHeight: 40 }}>
-                Join your{'\n'}family today!
+                {t('auth.register.heroLine1')}{'\n'}{t('auth.register.heroLine2')}
               </Text>
             </View>
 
             {/* Forma */}
             <View style={{ marginTop: 10 }}>
               <Text style={{ color: theme.textSecondary, fontSize: 13, marginBottom: 16, marginLeft: 4 }}>
-                Already have an account?{' '}
+                {t('auth.register.alreadyHaveAccount')}{' '}
                 <Text 
                   style={{ color: theme.text, fontWeight: '600' }}
                   onPress={() => navigation.navigate('Login')}
                 >
-                  Sign In
+                  {t('auth.register.signIn')}
                 </Text>
               </Text>
 
@@ -201,7 +203,7 @@ export function RegisterScreen() {
                 <User size={20} color={theme.textSecondary} />
                 <TextInput
                   style={{ flex: 1, marginLeft: 12, fontSize: 16, color: theme.text }}
-                  placeholder="Your name"
+                  placeholder={t('common.yourName')}
                   placeholderTextColor={theme.textMuted}
                   value={name}
                   onChangeText={setName}
@@ -223,7 +225,7 @@ export function RegisterScreen() {
                 <Mail size={20} color={theme.textSecondary} />
                 <TextInput
                   style={{ flex: 1, marginLeft: 12, fontSize: 16, color: theme.text }}
-                  placeholder="Email"
+                  placeholder={t('common.email')}
                   placeholderTextColor={theme.textMuted}
                   autoCapitalize="none"
                   keyboardType="email-address"
@@ -248,7 +250,7 @@ export function RegisterScreen() {
                 <Lock size={20} color={theme.textSecondary} />
                 <TextInput
                   style={{ flex: 1, marginLeft: 12, fontSize: 16, color: theme.text }}
-                  placeholder="Password"
+                  placeholder={t('common.password')}
                   placeholderTextColor={theme.textMuted}
                   secureTextEntry
                   autoComplete="password"
@@ -277,7 +279,7 @@ export function RegisterScreen() {
                 {isLoading ? (
                   <ActivityIndicator color={theme.background} />
                 ) : (
-                  <Text style={{ color: theme.background, fontWeight: '700', fontSize: 16 }}>Create Account</Text>
+                  <Text style={{ color: theme.background, fontWeight: '700', fontSize: 16 }}>{t('auth.register.createAccount')}</Text>
                 )}
               </TouchableOpacity>
             </View>

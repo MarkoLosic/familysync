@@ -15,10 +15,12 @@ import type { ShoppingItem } from '@/types';
 import { supabase } from '@/services/supabase';
 import { hapticError, hapticImpactLight, hapticSuccess } from '@/utils/haptics';
 import { useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
 
 export function ShoppingScreen() {
   const { family, profile } = useAuthStore();
   const { theme } = useTheme();
+  const { t } = useI18n();
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [title, setTitle] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -59,7 +61,7 @@ export function ShoppingScreen() {
   const handleCreate = async () => {
     if (!family?.id || !profile) return;
     if (!title.trim()) {
-      Alert.alert('Missing info', 'Enter an item name.');
+      Alert.alert(t('common.missingInfo'), t('shopping.enterItemName'));
       return;
     }
 
@@ -75,7 +77,7 @@ export function ShoppingScreen() {
       void hapticSuccess();
     } catch (error) {
       void hapticError();
-      Alert.alert('Create failed', error instanceof Error ? error.message : 'Try again.');
+      Alert.alert(t('common.createFailed'), error instanceof Error ? error.message : t('common.tryAgain'));
     } finally {
       setIsLoading(false);
     }
@@ -89,7 +91,7 @@ export function ShoppingScreen() {
       void hapticImpactLight();
     } catch (error) {
       void hapticError();
-      Alert.alert('Update failed', error instanceof Error ? error.message : 'Try again.');
+      Alert.alert(t('common.updateFailed'), error instanceof Error ? error.message : t('common.tryAgain'));
     } finally {
       setIsLoading(false);
     }
@@ -103,8 +105,8 @@ export function ShoppingScreen() {
         <View style={{ position: 'absolute', top: 120, left: 20, width: 30, height: 30, borderRadius: 15, backgroundColor: theme.colors.greenLight, opacity: 0.4 }} />
 
         <View style={{ paddingHorizontal: 24, paddingTop: 60, paddingBottom: 20 }}>
-          <Text style={{ color: theme.colors.text, fontSize: 28, fontWeight: '700' }}>Shopping 🛒</Text>
-          <Text style={{ color: theme.colors.textSecondary, fontSize: 16, marginTop: 8 }}>Keep the pantry stocked together.</Text>
+          <Text style={{ color: theme.colors.text, fontSize: 28, fontWeight: '700' }}>{t('shopping.title')} 🛒</Text>
+          <Text style={{ color: theme.colors.textSecondary, fontSize: 16, marginTop: 8 }}>{t('shopping.subtitle')}</Text>
         </View>
 
         <View style={{ paddingHorizontal: 24 }}>
@@ -115,7 +117,7 @@ export function ShoppingScreen() {
             borderWidth: 1,
             borderColor: theme.colors.border
           }}>
-            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600' }}>Add item</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600' }}>{t('shopping.addItem')}</Text>
             <View style={{ 
               backgroundColor: theme.colors.inputBg, 
               borderRadius: 16, 
@@ -125,9 +127,9 @@ export function ShoppingScreen() {
               borderWidth: 1,
               borderColor: theme.colors.border
             }}>
-              <TextInput
-                style={{ fontSize: 16, color: theme.colors.text }}
-                placeholder="Milk, bread, apples..."
+                <TextInput
+                  style={{ fontSize: 16, color: theme.colors.text }}
+                  placeholder={t('shopping.itemPlaceholder')}
                 placeholderTextColor={theme.colors.textSecondary}
                 value={title}
                 onChangeText={setTitle}
@@ -147,7 +149,7 @@ export function ShoppingScreen() {
               {isLoading ? (
                 <ActivityIndicator color={theme.colors.card} />
               ) : (
-                <Text style={{ color: theme.colors.card, fontWeight: '600', fontSize: 16 }}>Add to list</Text>
+                <Text style={{ color: theme.colors.card, fontWeight: '600', fontSize: 16 }}>{t('shopping.addToList')}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -161,7 +163,7 @@ export function ShoppingScreen() {
             borderWidth: 1,
             borderColor: theme.colors.border
           }}>
-            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600' }}>Your list</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '600' }}>{t('shopping.yourList')}</Text>
             <View style={{ marginTop: 16, gap: 12 }}>
               {items.map((item) => {
                 const checked = item.is_checked ?? false;
@@ -194,7 +196,7 @@ export function ShoppingScreen() {
                 );
               })}
               {items.length === 0 && (
-                <Text style={{ color: theme.colors.textSecondary, fontSize: 14 }}>No items yet.</Text>
+                <Text style={{ color: theme.colors.textSecondary, fontSize: 14 }}>{t('shopping.noItems')}</Text>
               )}
             </View>
           </View>
