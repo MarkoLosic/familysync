@@ -533,7 +533,7 @@ export function HomeScreen() {
                     marginRight: 12,
                   }} />
                   <Text style={{ color: theme.colors.text, fontSize: 15, flex: 1 }}>
-                    {item.name}
+                    {item.title || item.name}
                   </Text>
                   {item.quantity && item.quantity > 1 && (
                     <Text style={{ color: theme.colors.textMuted, fontSize: 13 }}>
