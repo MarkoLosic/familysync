@@ -22,13 +22,14 @@ const statusIcon = (status: LocationStatus, theme: any) => {
 };
 
 export function LocationsScreen() {
-  const { family, profile, familyMembers } = useAuthStore();
+  const { family, profile, familyMembers, session } = useAuthStore();
   const { theme } = useTheme();
   const [locations, setLocations] = useState<FamilyLocation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<LocationStatus>('away');
   const [currentCoords, setCurrentCoords] = useState<{ lat: number; lng: number } | null>(null);
   const locationSub = useRef<Location.LocationSubscription | null>(null);
+  const locationUserId = profile?.user_id ?? session?.user?.id ?? profile?.id ?? null;
 
   const loadLocations = async () => {
     if (!family?.id) return;
@@ -67,10 +68,10 @@ export function LocationsScreen() {
           lng: initial.coords.longitude,
         };
         setCurrentCoords(coords);
-        if (family?.id && profile) {
+        if (family?.id && locationUserId) {
           const updated = await upsertLocation({
             family_id: family.id,
-            user_id: profile.user_id ?? '', // KORISTI SAMO user_id
+            user_id: locationUserId,
             status: currentStatus,
             lat: coords.lat,
             lng: coords.lng,
@@ -94,11 +95,11 @@ export function LocationsScreen() {
             lng: position.coords.longitude,
           };
           setCurrentCoords(coords);
-          if (family?.id && profile) {
+          if (family?.id && locationUserId) {
             try {
               const updated = await upsertLocation({
                 family_id: family.id,
-                user_id: profile.user_id ?? '', // KORISTI SAMO user_id
+                user_id: locationUserId,
                 status: currentStatus,
                 lat: coords.lat,
                 lng: coords.lng,
@@ -123,16 +124,19 @@ export function LocationsScreen() {
         locationSub.current = null;
       }
     };
-  }, [family?.id, profile?.id, profile?.user_id, currentStatus]);
+  }, [family?.id, locationUserId, currentStatus]);
 
   const handleStatusUpdate = async (status: LocationStatus) => {
-    if (!family?.id || !profile) return;
+    if (!family?.id || !locationUserId) {
+      Alert.alert('Update failed', 'Missing user id. Please refresh and try again.');
+      return;
+    }
     try {
       setIsLoading(true);
       setCurrentStatus(status);
       const updated = await upsertLocation({
         family_id: family.id,
-        user_id: profile.user_id ?? '', // KORISTI SAMO user_id
+        user_id: locationUserId,
         status,
         lat: currentCoords?.lat ?? null,
         lng: currentCoords?.lng ?? null,
@@ -146,6 +150,8 @@ export function LocationsScreen() {
   };
 
   const locationByUser = new Map(locations.map((item) => [item.user_id, item]));
+  const getMemberLocation = (memberId: string, memberUserId?: string | null) =>
+    locationByUser.get(memberId) ?? (memberUserId ? locationByUser.get(memberUserId) : undefined);
   const markerLocations = useMemo(
     () => locations.filter((item) => typeof item.lat === 'number' && typeof item.lng === 'number'),
     [locations]
@@ -201,7 +207,11 @@ export function LocationsScreen() {
                   <Marker
                     key={item.id}
                     coordinate={{ latitude: item.lat as number, longitude: item.lng as number }}
-                    title={familyMembers.find((member) => member.id === item.user_id)?.name ?? 'Member'}
+                    title={
+                      familyMembers.find(
+                        (member) => member.id === item.user_id || member.user_id === item.user_id
+                      )?.name ?? 'Member'
+                    }
                     description={item.status}
                   />
                 ))}
@@ -272,7 +282,7 @@ export function LocationsScreen() {
             {isLoading && <ActivityIndicator color={theme.colors.primary} style={{ marginTop: 16 }} />}
             <View style={{ marginTop: 16, gap: 12 }}>
               {familyMembers.map((member, index) => {
-                const current = locationByUser.get(member.id);
+                const current = getMemberLocation(member.id, member.user_id);
                 const status = current?.status ?? 'away';
                 const bgColor = theme.colors.cardSecondary;
                 return (
