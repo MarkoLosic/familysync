@@ -212,6 +212,12 @@ const en: TranslationMap = {
   'profile.themeDark': 'Dark',
   'profile.themeColorful': 'Colorful',
   'profile.signOut': 'Sign out',
+  'profile.changePhoto': 'Change photo',
+  'profile.photoUpdated': 'Profile photo updated successfully.',
+  'profile.photoPermissionTitle': 'Permission required',
+  'profile.photoPermissionMessage': 'Allow photo access to set profile picture.',
+  'profile.photoPickerMissingTitle': 'Feature unavailable',
+  'profile.photoPickerMissingMessage': 'Install expo-image-picker and restart the app.',
 };
 
 const sr: TranslationMap = {
@@ -399,6 +405,12 @@ const sr: TranslationMap = {
   'profile.themeDark': 'Tamna',
   'profile.themeColorful': 'Sarena',
   'profile.signOut': 'Odjavi se',
+  'profile.changePhoto': 'Promeni sliku',
+  'profile.photoUpdated': 'Profilna slika je uspesno azurirana.',
+  'profile.photoPermissionTitle': 'Dozvola je potrebna',
+  'profile.photoPermissionMessage': 'Omoguci pristup galeriji za profilnu sliku.',
+  'profile.photoPickerMissingTitle': 'Opcija nije dostupna',
+  'profile.photoPickerMissingMessage': 'Instaliraj expo-image-picker i restartuj aplikaciju.',
 };
 
 const hr: TranslationMap = { ...sr, 'tabs.shopping': 'Kupnja' };
@@ -475,6 +487,12 @@ const de: TranslationMap = {
   'profile.themeLight': 'Hell',
   'profile.themeDark': 'Dunkel',
   'profile.themeColorful': 'Farbig',
+  'profile.changePhoto': 'Foto aendern',
+  'profile.photoUpdated': 'Profilbild erfolgreich aktualisiert.',
+  'profile.photoPermissionTitle': 'Berechtigung erforderlich',
+  'profile.photoPermissionMessage': 'Erlaube Fotozugriff fuer das Profilbild.',
+  'profile.photoPickerMissingTitle': 'Funktion nicht verfuegbar',
+  'profile.photoPickerMissingMessage': 'Installiere expo-image-picker und starte die App neu.',
 };
 
 const translations: Record<AppLanguage, TranslationMap> = { en, sr, hr, bs, de };

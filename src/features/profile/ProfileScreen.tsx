@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Alert,
   TextInput,
+  Image,
 } from 'react-native';
 import { Copy, LogOut } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
@@ -17,15 +18,19 @@ import { useTheme } from '@/theme';
 import { AppLanguage, languageOptions, useI18n } from '@/i18n';
 
 export function ProfileScreen() {
-  const { profile, family, familyMembers, signOut } = useAuthStore();
+  const { profile, family, familyMembers, signOut, refreshProfileAndFamily, session } = useAuthStore();
   const { theme, themeName, toggleTheme } = useTheme();
   const { t, language, setLanguage } = useI18n();
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [username, setUsername] = useState(profile?.username ?? profile?.name ?? '');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url ?? null);
   useEffect(() => {
     setUsername(profile?.username ?? profile?.name ?? '');
   }, [profile?.username, profile?.name]);
+  useEffect(() => {
+    if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
+  }, [profile?.avatar_url]);
   const [password, setPassword] = useState('');
 
   useEffect(() => {
@@ -107,6 +112,124 @@ export function ProfileScreen() {
     setLanguage(next);
   };
 
+  const handlePickProfilePhoto = async () => {
+    if (!profile) return;
+    const profileId = profile.id ?? profile.user_id;
+    const authUserId = session?.user?.id ?? profile.user_id ?? profile.id;
+    if (!profileId) {
+      Alert.alert(t('profile.updateFailed'), t('common.missingProfileId'));
+      return;
+    }
+    if (!authUserId) {
+      Alert.alert(t('profile.updateFailed'), t('common.missingProfileId'));
+      return;
+    }
+
+    let ImagePicker: any;
+    try {
+      ImagePicker = require('expo-image-picker');
+    } catch (error) {
+      Alert.alert(t('profile.photoPickerMissingTitle'), t('profile.photoPickerMissingMessage'));
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (permission.status !== 'granted') {
+        Alert.alert(t('profile.photoPermissionTitle'), t('profile.photoPermissionMessage'));
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (result.canceled || !result.assets?.length) {
+        return;
+      }
+
+      const asset = result.assets[0];
+      const response = await fetch(asset.uri);
+      const blob = await response.blob();
+      const ext = asset.uri.split('.').pop()?.toLowerCase() || 'jpg';
+      const storagePath = `${authUserId}/${Date.now()}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(storagePath, blob, {
+          contentType: asset.mimeType ?? 'image/jpeg',
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('avatars').getPublicUrl(storagePath);
+      const nextAvatarUrl = data.publicUrl;
+
+      const authId = session?.user?.id;
+      if (!authId) {
+        throw new Error('Missing authenticated user id.');
+      }
+
+      const missingAvatarColumnHint =
+        "Missing 'avatar_url' column in profiles table. Run: ALTER TABLE profiles ADD COLUMN IF NOT EXISTS avatar_url text;";
+
+      let persisted = false;
+      let lastError: Error | null = null;
+
+      const updateByKey = async (column: 'id' | 'user_id', value: string) => {
+        const updateRes = await supabase
+          .from('profiles')
+          .update({ avatar_url: nextAvatarUrl })
+          .eq(column, value)
+          .select('avatar_url')
+          .maybeSingle();
+
+        if (updateRes.error) {
+          const message = String(updateRes.error.message || '').toLowerCase();
+          if (message.includes('avatar_url') && message.includes('column')) {
+            throw new Error(missingAvatarColumnHint);
+          }
+          if (message.includes('column') && message.includes(column)) {
+            return false;
+          }
+          lastError = new Error(updateRes.error.message);
+          return false;
+        }
+
+        if (updateRes.data?.avatar_url) {
+          return true;
+        }
+        return false;
+      };
+
+      if (await updateByKey('id', authId)) {
+        persisted = true;
+      } else if (await updateByKey('user_id', authId)) {
+        persisted = true;
+      }
+
+      if (!persisted) {
+        if (lastError) throw lastError;
+        throw new Error(
+          'Avatar URL was not persisted to profile row. Check profiles RLS policy to allow updating own row.'
+        );
+      }
+
+      setAvatarUrl(`${nextAvatarUrl}?v=${Date.now()}`);
+      await refreshProfileAndFamily();
+      Alert.alert(t('profile.updatedTitle'), t('profile.photoUpdated'));
+    } catch (error) {
+      Alert.alert(t('profile.updateFailed'), error instanceof Error ? error.message : t('profile.tryAgain'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 100 }}>
@@ -136,10 +259,36 @@ export function ProfileScreen() {
               backgroundColor: theme.colors.primary,
               alignItems: 'center',
               justifyContent: 'center',
-              marginBottom: 16
+              marginBottom: 16,
+              overflow: 'hidden',
             }}>
-              <Text style={{ fontSize: 36 }}>👤</Text>
+              {avatarUrl ? (
+                <Image
+                  source={{ uri: avatarUrl }}
+                  style={{ width: 80, height: 80 }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Text style={{ fontSize: 36 }}>👤</Text>
+              )}
             </View>
+            <TouchableOpacity
+              style={{
+                backgroundColor: theme.colors.cardSecondary,
+                borderRadius: 12,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+                marginBottom: 12,
+              }}
+              onPress={handlePickProfilePhoto}
+              disabled={isLoading}
+            >
+              <Text style={{ color: theme.colors.text, fontSize: 13, fontWeight: '600' }}>
+                {t('profile.changePhoto')}
+              </Text>
+            </TouchableOpacity>
             <Text style={{ color: theme.colors.text, fontSize: 22, fontWeight: '700' }}>{profile?.name ?? t('profile.userFallback')}</Text>
             <View style={{ 
               backgroundColor: theme.colors.primary, 
